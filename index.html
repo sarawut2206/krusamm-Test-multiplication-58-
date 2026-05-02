@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>วิเคราะห์ความคล่องสูตรคูณ — ครูแซม</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ───────────────────────────────────────────────── */
+:root {
+  --ink:     #1a1108;
+  --paper:   #fdf8f0;
+  --amber:   #d97706;
+  --rust:    #b45309;
+  --sage:    #15803d;
+  --crimson: #be123c;
+  --slate:   #334155;
+  --mist:    #e7e3da;
+  --gold:    #fbbf24;
+  --card:    #ffffff;
+  --border:  #d4c9b0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Sarabun',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(251,191,36,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(21,128,61,0.04) 0%, transparent 50%);
+}
+
+/* ── TYPOGRAPHY ───────────────────────────────────────────── */
+.serif { font-family:'Noto Serif Thai',serif; }
+.mono  { font-family:'IBM Plex Mono',monospace; }
+
+/* ── HEADER ───────────────────────────────────────────────── */
+.topbar{
+  background:var(--ink);
+  padding:12px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;
+}
+.brand{
+  font-family:'Noto Serif Thai',serif;
+  font-size:18px;font-weight:900;
+  color:var(--gold);letter-spacing:.5px;
+}
+.brand em{color:#fff;font-style:normal;font-weight:400}
+.topbadge{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;font-weight:600;
+  background:var(--amber);color:var(--ink);
+  padding:3px 10px;border-radius:3px;letter-spacing:.5px;
+}
+
+/* ── SCREEN ───────────────────────────────────────────────── */
+.screen{display:none;animation:rise .35s ease}
+.screen.active{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.wrap{max-width:540px;margin:0 auto;padding:24px 16px 64px}
+
+/* ── HOME ─────────────────────────────────────────────────── */
+.hero-strip{
+  background:var(--ink);
+  border-radius:16px;
+  padding:32px 28px;
+  margin-bottom:20px;
+  position:relative;overflow:hidden;
+}
+.hero-strip::after{
+  content:'58';
+  position:absolute;right:-10px;bottom:-20px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:130px;font-weight:700;
+  color:rgba(255,255,255,0.04);line-height:1;
+  pointer-events:none;
+}
+.htag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.htitle{font-family:'Noto Serif Thai',serif;font-size:28px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:10px;}
+.htitle span{color:var(--gold);}
+.hsub{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.7;}
+
+/* ── RESEARCH CARD ─────────────────────────────────────────── */
+.research-card{
+  border:1px solid var(--border);
+  border-left:4px solid var(--amber);
+  background:var(--card);
+  border-radius:10px;
+  padding:16px 18px;
+  margin-bottom:16px;
+}
+.rc-title{font-family:'Noto Serif Thai',serif;font-size:13px;font-weight:700;color:var(--rust);margin-bottom:10px;}
+.rc-ref{font-size:11px;color:var(--slate);line-height:1.6;margin-bottom:6px;}
+.rc-ref strong{color:var(--ink);}
+.rc-divider{height:1px;background:var(--mist);margin:10px 0;}
+.rc-note{font-size:11px;color:var(--slate);line-height:1.6;font-style:italic;}
+
+/* ── CRITERIA TABLE ───────────────────────────────────────── */
+.criteria-box{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.cb-head{
+  background:var(--ink);
+  padding:12px 16px;
+  font-family:'Noto Serif Thai',serif;
+  font-size:13px;font-weight:700;color:var(--gold);
+}
+.cb-row{
+  display:flex;align-items:center;
+  padding:9px 16px;border-bottom:1px solid var(--mist);
+  font-size:12px;
+}
+.cb-row:last-child{border-bottom:none;}
+.cb-row.target{background:rgba(217,119,6,0.06);}
+.cb-grade{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:700;font-size:13px;
+  color:var(--ink);min-width:40px;
+}
+.cb-bar-wrap{flex:1;margin:0 12px;background:var(--mist);border-radius:4px;height:6px;overflow:hidden;}
+.cb-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--amber),var(--rust));}
+.cb-time{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;font-weight:600;color:var(--amber);
+  min-width:44px;text-align:right;
+}
+.cb-note{font-size:10px;color:var(--slate);margin-left:8px;white-space:nowrap;}
+
+/* ── MODE SWITCH ───────────────────────────────────────────── */
+.mode-row{display:flex;gap:8px;margin-bottom:18px;}
+.mchip{
+  flex:1;padding:11px 8px;
+  border:2px solid var(--border);border-radius:8px;
+  font-family:'Noto Serif Thai',serif;font-size:12px;font-weight:700;
+  cursor:pointer;text-align:center;background:var(--card);color:var(--slate);
+  transition:all .2s;
+}
+.mchip.on{border-color:var(--ink);background:var(--ink);color:var(--gold);}
+
+/* ── BTN ───────────────────────────────────────────────────── */
+.btn{
+  display:block;width:100%;padding:14px 20px;
+  border:none;border-radius:10px;
+  font-family:'Noto Serif Thai',serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .2s;text-align:center;margin-bottom:10px;
+}
+.btn-ink{background:var(--ink);color:var(--gold);box-shadow:0 6px 20px rgba(26,17,8,.25);}
+.btn-ink:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,17,8,.3);}
+.btn-amber{background:var(--amber);color:#fff;box-shadow:0 6px 18px rgba(217,119,6,.3);}
+.btn-amber:hover{transform:translateY(-2px);}
+.btn-ghost{background:transparent;color:var(--slate);border:2px solid var(--border);}
+.btn-ghost:hover{border-color:var(--slate);background:var(--mist);}
+
+/* ── FORM ──────────────────────────────────────────────────── */
+.form-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:14px;}
+.form-label{font-size:11px;font-weight:700;color:var(--slate);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:block;}
+input[type="text"],select{
+  width:100%;padding:11px 14px;
+  border:2px solid var(--border);border-radius:8px;
+  font-family:'Sarabun',sans-serif;font-size:14px;
+  color:var(--ink);background:var(--paper);
+  outline:none;transition:border-color .2s;appearance:none;
+  margin-bottom:14px;
+}
+input:focus,select:focus{border-color:var(--amber);background:#fff;}
+.inforow{display:flex;justify-content:space-between;font-size:12px;color:var(--slate);padding:4px 0;}
+.inforow strong{color:var(--ink);}
+
+/* ── QUIZ ──────────────────────────────────────────────────── */
+.quiz-top{
+  background:var(--ink);border-radius:16px;
+  padding:20px;margin-bottom:14px;color:#fff;
+}
+.qt-row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.qt-tag{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  padding:3px 10px;border-radius:4px;letter-spacing:.5px;
+}
+.qt-counter{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.7);}
+.progress-track{background:rgba(255,255,255,.12);border-radius:4px;height:4px;margin-bottom:14px;overflow:hidden;}
+.progress-fill{background:var(--gold);height:100%;border-radius:4px;transition:width .4s;}
+.timer-big{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:58px;font-weight:700;letter-spacing:-2px;
+  text-align:center;margin:6px 0 10px;color:#fff;
+  transition:color .3s;
+}
+.timer-big.warn{color:var(--gold);}
+.timer-big.hot{color:#f87171;animation:blink .5s infinite alternate;}
+@keyframes blink{from{opacity:1}to{opacity:.5}}
+.score-strip{display:flex;justify-content:space-around;}
+.si{text-align:center;}
+.si .v{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#fff;line-height:1;}
+.si .l{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;}
+
+.qcard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:28px 20px;text-align:center;
+  margin-bottom:12px;
+  box-shadow:0 4px 20px rgba(26,17,8,.07);
+}
+.qtext{font-family:'IBM Plex Mono',monospace;font-size:46px;font-weight:700;color:var(--ink);line-height:1;}
+.qsub{font-size:12px;color:var(--slate);margin-top:6px;}
+
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.choice{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:12px;padding:18px 10px;
+  font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:700;
+  color:var(--ink);cursor:pointer;text-align:center;
+  transition:all .15s;box-shadow:0 2px 8px rgba(26,17,8,.05);
+}
+.choice:hover:not(:disabled){border-color:var(--amber);transform:translateY(-2px);}
+.choice.ok {background:rgba(21,128,61,.12);border-color:var(--sage);color:var(--sage);}
+.choice.bad{background:rgba(190,18,60,.1); border-color:var(--crimson);color:var(--crimson);}
+.choice.show{background:rgba(21,128,61,.08);border-color:var(--sage);color:var(--sage);}
+.choice:disabled{cursor:not-allowed;}
+
+.fb{
+  border-radius:10px;padding:10px 16px;text-align:center;
+  font-family:'Noto Serif Thai',serif;font-size:14px;font-weight:700;
+  margin-bottom:10px;display:none;
+}
+.fb.ok {background:rgba(21,128,61,.12);color:var(--sage);}
+.fb.bad{background:rgba(190,18,60,.1); color:var(--crimson);}
+
+/* ── RESULT ────────────────────────────────────────────────── */
+.result-banner{
+  border-radius:16px;padding:30px 24px;text-align:center;
+  margin-bottom:16px;color:#fff;
+}
+.rb-pass{background:linear-gradient(135deg,#065f46,var(--sage));}
+.rb-fail{background:linear-gradient(135deg,#881337,var(--crimson));}
+.rb-icon{font-size:50px;margin-bottom:8px;}
+.rb-title{font-family:'Noto Serif Thai',serif;font-size:24px;font-weight:900;margin-bottom:4px;}
+.rb-name{font-size:14px;opacity:.85;}
+.rb-badge{
+  display:inline-block;
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);
+  padding:4px 14px;border-radius:20px;font-size:11px;margin-top:8px;
+}
+
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.sbox{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 8px;text-align:center;
+}
+.sbox .n{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--ink);}
+.sbox .t{font-size:10px;color:var(--slate);margin-top:3px;}
+
+/* ── LEVEL ANALYSIS ────────────────────────────────────────── */
+.lv-card{
+  background:var(--card);border:2px solid var(--amber);
+  border-radius:14px;padding:22px;margin-bottom:14px;
+  box-shadow:0 4px 20px rgba(217,119,6,.12);
+}
+.lv-card-title{
+  font-family:'Noto Serif Thai',serif;font-size:14px;font-weight:700;
+  color:var(--rust);text-align:center;margin-bottom:16px;
+}
+.lv-big{text-align:center;margin-bottom:14px;}
+.lv-num{
+  font-family:'IBM Plex Mono',monospace;font-size:56px;font-weight:700;
+  line-height:1;color:var(--ink);
+}
+.lv-sub{font-size:12px;color:var(--slate);margin-top:4px;}
+.lv-speed{font-family:'Noto Serif Thai',serif;font-size:13px;font-weight:700;color:var(--amber);margin-top:4px;}
+
+.meter{margin-bottom:16px;}
+.meter-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--slate);margin-bottom:4px;}
+.meter-track{background:var(--mist);border-radius:6px;height:10px;overflow:hidden;}
+.meter-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--sage),var(--amber));transition:width .9s ease;}
+
+.lv-table{width:100%;border-collapse:collapse;font-size:12px;}
+.lv-table th{
+  background:var(--ink);color:#fff;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+  padding:8px 10px;text-align:left;letter-spacing:.5px;
+}
+.lv-table td{padding:8px 10px;border-bottom:1px solid var(--mist);}
+.lv-table tr:last-child td{border:none;}
+.lv-table tr.hl td{background:rgba(217,119,6,.08);font-weight:700;}
+.lv-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:11px;}
+.ck{color:var(--sage);font-weight:700;}
+.arrow{color:var(--amber);font-weight:700;font-size:13px;}
+
+/* ── VERDICT ───────────────────────────────────────────────── */
+.verdict{
+  border-radius:12px;padding:16px 20px;text-align:center;
+  font-family:'Noto Serif Thai',serif;margin-bottom:14px;
+}
+.vd-pass{background:rgba(21,128,61,.1);border:2px solid var(--sage);color:#065f46;}
+.vd-fail{background:rgba(190,18,60,.08);border:2px solid var(--crimson);color:#881337;}
+.vd-info{background:rgba(217,119,6,.1);border:2px solid var(--amber);color:var(--rust);}
+.vd-icon{font-size:26px;margin-bottom:4px;}
+.vd-text{font-size:15px;font-weight:700;}
+.vd-sub{font-size:12px;font-weight:400;margin-top:4px;opacity:.85;}
+
+/* ── HISTORY ───────────────────────────────────────────────── */
+.hrow{
+  display:flex;align-items:center;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;margin-bottom:7px;
+}
+.hl{font-size:12px;color:var(--slate);flex:1;}
+.hv{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;flex:1;text-align:center;}
+.hb{font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;flex:1;text-align:right;white-space:nowrap;}
+.hb.p{background:rgba(21,128,61,.12);color:var(--sage);}
+.hb.f{background:rgba(190,18,60,.12);color:var(--crimson);}
+
+/* ── SHARE ─────────────────────────────────────────────────── */
+.share-box{
+  background:var(--ink);border-radius:14px;padding:20px;
+  margin-bottom:14px;position:relative;overflow:hidden;
+}
+.share-box::after{content:'×';position:absolute;font-family:'IBM Plex Mono',monospace;font-size:100px;font-weight:700;right:-5px;bottom:-20px;color:rgba(255,255,255,.04);}
+.share-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gold);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
+.share-text{font-size:12px;line-height:1.9;color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);border-radius:8px;padding:12px;margin-bottom:10px;white-space:pre-wrap;font-family:'Sarabun',sans-serif;}
+.divline{height:1px;background:var(--mist);margin:14px 0;}
+.sec-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--gold);
+  padding:10px 22px;border-radius:40px;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+  z-index:9999;transition:transform .3s cubic-bezier(.175,.885,.32,1.275);
+  white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.25);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── RESEARCH MODAL ────────────────────────────────────────── */
+.ref-link{
+  display:block;text-align:center;
+  font-size:11px;color:var(--amber);
+  cursor:pointer;margin-top:6px;text-decoration:underline;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">ครู<em>แซม</em></div>
+  <div class="topbadge">MULTIPLICATION · 58 FACTS</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- ══ HOME ══════════════════════════════════════════════════ -->
+<div class="screen active" id="sc-home">
+<div class="wrap">
+
+  <div class="hero-strip">
+    <div class="htag">📐 Research-Based Assessment</div>
+    <div class="htitle">วัดความคล่อง<br><span>สูตรคูณ</span> 58 ผลลัพธ์</div>
+    <div class="hsub">
+      58 ผลลัพธ์ไม่ซ้ำ แม่ 2–12 · 4 ตัวเลือก<br>
+      เกณฑ์อิงงานวิจัย · วิเคราะห์ระดับอัตโนมัติ
+    </div>
+  </div>
+
+  <!-- research basis -->
+  <div class="research-card">
+    <div class="rc-title">📚 ที่มาของเกณฑ์เวลา — อิงงานวิจัย</div>
+    <div class="rc-ref">
+      <strong>Automaticity Benchmark:</strong> นักเรียนที่คล่องแคล่ว (automaticity) ควรตอบได้ใน <strong>≤ 2 วิ/ข้อ</strong>
+      หรือทำได้ <strong>30 ข้อใน 60 วิ</strong>
+      <br><em style="font-size:10px;">(Hoboken K-12 / Jodi Durgin, 2025; อ้างอิง National Math Advisory Panel, 2008)</em>
+    </div>
+    <div class="rc-divider"></div>
+    <div class="rc-ref">
+      <strong>Grade Fluency Expectations:</strong> ป.3 ควรท่องจำได้ครบ · ป.4 คล่องแคล่ว · ป.5–6 อัตโนมัติ
+      <br><em style="font-size:10px;">(Rocket Math, 2024; CCSS 3.OA.C.7 "know from memory all products")</em>
+    </div>
+    <div class="rc-divider"></div>
+    <div class="rc-ref">
+      <strong>Fluency Rate Target:</strong> ตอบถูก <strong>30–40 ข้อ/นาที</strong> = threshold ของ automaticity จริง
+      (ต่ำกว่า 30/นาที = ยังคำนวณ ไม่ใช่จำ)
+      <br><em style="font-size:10px;">(Hasbrouck & Tindal, 2006; Burns, VanDerHeyden & Jiban, 2006)</em>
+    </div>
+    <div class="rc-divider"></div>
+    <div class="rc-note">
+      🧮 <strong>การคำนวณเกณฑ์นี้:</strong> ใช้ 58 ผลลัพธ์ × เวลาต่อข้อที่กำหนดตามระดับ
+      ตั้งแต่ 2.5 วิ/ข้อ (ป.6 · ระดับ automaticity) ถึง 10.6 วิ/ข้อ (อ.1 · ระดับท่องจำแรก)
+      สอดคล้องกับพัฒนาการตามช่วงวัย
+    </div>
+  </div>
+
+  <!-- criteria table -->
+  <div class="criteria-box">
+    <div class="cb-head">🎯 เกณฑ์เวลา 58 ผลลัพธ์ (อิงงานวิจัย)</div>
+    <!-- rows built by JS -->
+    <div id="cb-rows"></div>
+    <div class="cb-row" style="font-size:11px;color:var(--slate);padding:10px 16px;">
+      🔍 ระดับ = คะแนนจากเวลา ปรับตามข้อที่ผิด (−1 ระดับ/ข้อ)
+    </div>
+  </div>
+
+  <div class="mode-row">
+    <div class="mchip on" id="chip-a" onclick="setMode('a')">🔍 วิเคราะห์ระดับ</div>
+    <div class="mchip"    id="chip-t" onclick="setMode('t')">🎯 ตั้งเป้าหมาย</div>
+  </div>
+
+  <button class="btn btn-ink" onclick="goSetup()" style="font-size:17px;padding:16px;">
+    🔥 เริ่มทดสอบ 58 ผลลัพธ์
+  </button>
+
+</div>
+</div>
+
+<!-- ══ SETUP ══════════════════════════════════════════════════ -->
+<div class="screen" id="sc-setup">
+<div class="wrap">
+  <div class="form-box">
+    <div class="serif" style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:16px;" id="setup-h">📋 ข้อมูลนักเรียน</div>
+
+    <label class="form-label">ชื่อ–นามสกุล</label>
+    <input type="text" id="inp-name" placeholder="เช่น น้องมิน สุขใจ">
+
+    <div id="grade-wrap" style="display:none;">
+      <label class="form-label">ระดับชั้น (กำหนดเป้าหมาย)</label>
+      <select id="inp-grade" onchange="refreshInfo()">
+        <option value="">-- เลือกระดับชั้น --</option>
+        <option value="อ.1|612">อนุบาล 1 — เป้า 10:12 (612 วิ)</option>
+        <option value="อ.2|553">อนุบาล 2 — เป้า  9:13 (553 วิ)</option>
+        <option value="อ.3|494">อนุบาล 3 — เป้า  8:14 (494 วิ)</option>
+        <option value="ป.1|436">ประถม 1  — เป้า  7:16 (436 วิ)</option>
+        <option value="ป.2|377">ประถม 2  — เป้า  6:17 (377 วิ)</option>
+        <option value="ป.3|319">ประถม 3  — เป้า  5:19 (319 วิ)</option>
+        <option value="ป.4|261">ประถม 4  — เป้า  4:21 (261 วิ)</option>
+        <option value="ป.5|202">ประถม 5  — เป้า  3:22 (202 วิ)</option>
+        <option value="ป.6|144">ประถม 6  — เป้า  2:24 (144 วิ)</option>
+      </select>
+    </div>
+
+    <div id="info-analyze" style="border-top:1px solid var(--mist);padding-top:12px;">
+      <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ (ผลลัพธ์ไม่ซ้ำ)</strong></div>
+      <div class="inforow"><span>โหมด</span><strong>🔍 วิเคราะห์ระดับอัตโนมัติ</strong></div>
+      <div class="inforow"><span>เวลา</span><strong>ไม่จำกัด (จับเวลาขึ้น)</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>ใช้ปรับระดับ (−1 ระดับ/ข้อ)</strong></div>
+    </div>
+    <div id="info-target" style="display:none;border-top:1px solid var(--mist);padding-top:12px;">
+      <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ</strong></div>
+      <div class="inforow"><span>เวลาที่กำหนด</span><strong id="inf-time">—</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>ใช้ปรับระดับ (−1 ระดับ/ข้อ)</strong></div>
+    </div>
+  </div>
+
+  <button class="btn btn-amber" onclick="doStart()">✓ ยืนยัน — เริ่มทดสอบ</button>
+  <button class="btn btn-ghost" onclick="go('sc-home')">← กลับ</button>
+</div>
+</div>
+
+<!-- ══ QUIZ ═══════════════════════════════════════════════════ -->
+<div class="screen" id="sc-quiz">
+<div class="wrap">
+  <div class="quiz-top">
+    <div class="qt-row1">
+      <div class="qt-tag" id="qt-tag">🔍 ANALYZE</div>
+      <div class="qt-counter" id="qt-count">1 / 58</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="q-prog" style="width:0%"></div></div>
+    <div class="timer-big" id="q-timer">00:00</div>
+    <div class="score-strip">
+      <div class="si"><div class="v" id="qs-ok">0</div><div class="l">✅ ถูก</div></div>
+      <div class="si"><div class="v" id="qs-bad">0</div><div class="l">❌ ผิด</div></div>
+      <div class="si"><div class="v" id="qs-left">58</div><div class="l">เหลือ</div></div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qtext" id="q-text">— × — = ?</div>
+    <div class="qsub" id="q-sub">เลือกตัวคูณที่ถูกต้อง</div>
+  </div>
+
+  <div class="fb" id="fb"></div>
+  <div class="choices" id="choices"></div>
+</div>
+</div>
+
+<!-- ══ RESULT ═════════════════════════════════════════════════ -->
+<div class="screen" id="sc-result">
+<div class="wrap">
+
+  <div class="result-banner" id="rb">
+    <div class="rb-icon" id="rb-icon">🏆</div>
+    <div class="rb-title" id="rb-title">ผ่านเกณฑ์!</div>
+    <div class="rb-name" id="rb-name"></div>
+    <div class="rb-badge" id="rb-badge"></div>
+  </div>
+
+  <div class="stat3" id="stats"></div>
+
+  <!-- level analysis -->
+  <div class="lv-card">
+    <div class="lv-card-title">🔬 ผลวิเคราะห์ระดับความคล่องแคล่ว</div>
+    <div class="lv-big">
+      <div class="lv-num" id="lv-num">—</div>
+      <div class="lv-sub" id="lv-sub"></div>
+      <div class="lv-speed" id="lv-speed"></div>
+    </div>
+    <div class="meter">
+      <div class="meter-labels">
+        <span>เริ่มต้น (อ.1)</span>
+        <span id="lv-pct">0%</span>
+        <span>คล่องแคล่ว (ป.6)</span>
+      </div>
+      <div class="meter-track"><div class="meter-fill" id="lv-fill" style="width:0%"></div></div>
+    </div>
+    <table class="lv-table">
+      <thead><tr><th>ระดับ</th><th>เป้าหมาย</th><th>เวลาของคุณ</th><th>สถานะ</th></tr></thead>
+      <tbody id="lv-tbody"></tbody>
+    </table>
+    <div style="margin-top:10px;padding:10px;background:var(--mist);border-radius:6px;font-size:10px;color:var(--slate);line-height:1.6;">
+      📚 <strong>อ้างอิง:</strong> Hoboken K-12 / Jodi Durgin (2025) · Rocket Math (2024) · Burns, VanDerHeyden & Jiban (2006) · National Math Advisory Panel (2008) · CCSS 3.OA.C.7
+    </div>
+  </div>
+
+  <div class="verdict" id="vd">
+    <div class="vd-icon" id="vd-icon"></div>
+    <div class="vd-text" id="vd-text"></div>
+    <div class="vd-sub" id="vd-sub"></div>
+  </div>
+
+  <div class="sec-tag">รายละเอียด</div>
+  <div id="hist"></div>
+
+  <div class="divline"></div>
+
+  <div class="share-box">
+    <div class="share-tag">📤 แชร์ผลให้ผู้ปกครอง</div>
+    <div class="share-text" id="sh-text"></div>
+    <button class="btn btn-amber" onclick="copyShare()">📋 คัดลอกข้อความ</button>
+  </div>
+
+  <button class="btn btn-ink" onclick="go('sc-home')">🔄 ทดสอบอีกครั้ง</button>
+</div>
+</div>
+
+<!-- ══ SCRIPT ══════════════════════════════════════════════════ -->
+<script>
+/* ── RESEARCH-BASED LEVELS ────────────────────────────────────
+   เกณฑ์: อิงงานวิจัย
+   - Automaticity = ≤ 2 วิ/ข้อ (30 ข้อ/60 วิ) สำหรับนักเรียนที่คล่องแคล่วเต็มที่
+   - 58 ผลลัพธ์ × วิ/ข้อตามระดับ
+   ระดับ  วิ/ข้อ   58×   ฐานที่มา
+   ป.6    2.48    144   automaticity จริง (≤2.5 วิ → 24+ ข้อ/นาที)
+   ป.5    3.48    202   fluent (20–24 ข้อ/นาที)
+   ป.4    4.50    261   developing fluency (≈13 ข้อ/นาที)
+   ป.3    5.50    319   beginning fluency (≈10.9 ข้อ/นาที)
+   ป.2    6.50    377   counting strategies + some recall
+   ป.1    7.52    436   mostly counting
+   อ.3    8.52    494   first introduction
+   อ.2    9.53    553   early exposure
+   อ.1   10.55    612   pre-formal
+   ─────────────────────────────────────────────────────────────
+   ERROR PENALTY: ทุก 1 ข้อที่ผิด = +1 ระดับลดลง (เลื่อนระดับลง 1 ขั้น)
+   ─────────────────────────────────────────────────────── */
+const LEVELS = [
+  { g:'ป.6', sec:144, label:'ประถม 6',  note:'Automaticity (≤2.5 วิ/ข้อ)',   css:'#7c3aed', bg:'#ede9fe' },
+  { g:'ป.5', sec:202, label:'ประถม 5',  note:'Fluent (≤3.5 วิ/ข้อ)',         css:'#1d4ed8', bg:'#dbeafe' },
+  { g:'ป.4', sec:261, label:'ประถม 4',  note:'Developing (≤4.5 วิ/ข้อ)',     css:'#0369a1', bg:'#e0f2fe' },
+  { g:'ป.3', sec:319, label:'ประถม 3',  note:'Beginning (≤5.5 วิ/ข้อ)',      css:'#047857', bg:'#d1fae5' },
+  { g:'ป.2', sec:377, label:'ประถม 2',  note:'Counting+Recall (≤6.5 วิ/ข้อ)',css:'#15803d', bg:'#dcfce7' },
+  { g:'ป.1', sec:436, label:'ประถม 1',  note:'Mostly Counting (≤7.5 วิ/ข้อ)',css:'#a16207', bg:'#fef9c3' },
+  { g:'อ.3', sec:494, label:'อนุบาล 3', note:'First Intro (≤8.5 วิ/ข้อ)',    css:'#b45309', bg:'#fef3c7' },
+  { g:'อ.2', sec:553, label:'อนุบาล 2', note:'Early Exposure (≤9.5 วิ/ข้อ)', css:'#c2410c', bg:'#ffedd5' },
+  { g:'อ.1', sec:612, label:'อนุบาล 1', note:'Pre-formal (≤10.6 วิ/ข้อ)',    css:'#be123c', bg:'#ffe4e6' },
+];
+const TOTAL_Q = 58;
+
+let mode = 'a'; // 'a'nalyze | 't'arget
+let sName='', sGrade='', tSec=0, quiz={};
+
+/* ── init criteria table ─────────────────────────────────── */
+(function buildCriteriaTable(){
+  const max = LEVELS[LEVELS.length-1].sec;
+  const min = LEVELS[0].sec;
+  const el  = document.getElementById('cb-rows');
+  LEVELS.forEach(lv => {
+    const pct = Math.round(((max - lv.sec) / (max - min)) * 100);
+    el.innerHTML += `
+      <div class="cb-row">
+        <span class="cb-grade">${lv.g}</span>
+        <div class="cb-bar-wrap"><div class="cb-bar" style="width:${pct}%"></div></div>
+        <span class="cb-time">${fmtT(lv.sec)}</span>
+        <span class="cb-note" style="color:${lv.css}">${lv.note.split('(')[0].trim()}</span>
+      </div>`;
+  });
+})();
+
+/* ── helpers ─────────────────────────────────────────────── */
+function fmtT(s){
+  if(!s||s<0)s=0;
+  return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+function detectLv(sec, wrong){
+  // Find base level by time
+  let idx = -1;
+  for(let i=0;i<LEVELS.length;i++) if(sec<=LEVELS[i].sec){idx=i;break;}
+  if(idx===-1) return null; // slower than อ.1
+  // Error penalty: each wrong answer shifts level down by 1
+  const penaltyIdx = Math.min(idx + wrong, LEVELS.length - 1);
+  return { ...LEVELS[penaltyIdx], baseIdx: idx, penaltySteps: wrong };
+}
+
+/* ── mode ────────────────────────────────────────────────── */
+function setMode(m){
+  mode=m;
+  document.getElementById('chip-a').classList.toggle('on',m==='a');
+  document.getElementById('chip-t').classList.toggle('on',m==='t');
+}
+function goSetup(){
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-grade').value='';
+  document.getElementById('setup-h').textContent =
+    mode==='a' ? '📋 ข้อมูลนักเรียน — วิเคราะห์ระดับ'
+               : '📋 ข้อมูลนักเรียน — ตั้งเป้าหมาย';
+  document.getElementById('grade-wrap').style.display  = mode==='t'?'':'none';
+  document.getElementById('info-analyze').style.display= mode==='a'?'':'none';
+  document.getElementById('info-target').style.display = mode==='t'?'':'none';
+  go('sc-setup');
+}
+function refreshInfo(){
+  const v=document.getElementById('inp-grade').value;
+  if(v){ document.getElementById('inf-time').textContent=`${fmtT(parseInt(v.split('|')[1]))} วิ`; }
+}
+function doStart(){
+  const n=document.getElementById('inp-name').value.trim();
+  if(!n){toast('⚠️ กรุณากรอกชื่อนักเรียน');return;}
+  sName=n;
+  if(mode==='t'){
+    const gv=document.getElementById('inp-grade').value;
+    if(!gv){toast('⚠️ กรุณาเลือกระดับชั้น');return;}
+    [sGrade,tSec]=[gv.split('|')[0],parseInt(gv.split('|')[1])];
+  } else {sGrade='';tSec=0;}
+  startQuiz();
+}
+
+/* ── question bank: 58 unique products ──────────────────── */
+function buildQs(){
+  const seen=new Map();
+  for(let a=2;a<=12;a++)
+    for(let b=1;b<=12;b++)
+      if(!seen.has(a*b)) seen.set(a*b,{a,b,ans:a*b});
+  return shuffle([...seen.values()]);
+}
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function mkChoices(correct){
+  const s=new Set([correct]);
+  let t=0;
+  while(s.size<4&&t<300){t++;const c=correct+(Math.floor(Math.random()*17)-8);if(c>=1&&c<=12&&c!==correct)s.add(c);}
+  for(let v=1;v<=12&&s.size<4;v++) if(v!==correct)s.add(v);
+  return [...s].slice(0,4).sort(()=>Math.random()-.5);
+}
+
+/* ── quiz logic ──────────────────────────────────────────── */
+function startQuiz(){
+  document.getElementById('qt-tag').textContent = mode==='a'?'🔍 ANALYZE':'🎯 TARGET';
+  quiz={qs:buildQs(),cur:0,ok:0,bad:0,ans:false,iv:null,t0:Date.now()};
+  quiz.iv=setInterval(tick,500);
+  renderQ();
+  go('sc-quiz');
+}
+function tick(){
+  const e=Math.floor((Date.now()-quiz.t0)/1000);
+  const el=document.getElementById('q-timer');
+  if(mode==='t'){
+    const r=tSec-e;
+    if(r<=0){el.textContent='00:00';el.className='timer-big hot';clearInterval(quiz.iv);setTimeout(finish,500);return;}
+    el.textContent=fmtT(r);
+    el.className='timer-big'+(r<=10?' hot':r<=30?' warn':'');
+  } else {
+    el.textContent=fmtT(e);el.className='timer-big';
+  }
+}
+function renderQ(){
+  const q=quiz.qs[quiz.cur];quiz.ans=false;
+  document.getElementById('q-prog').style.width=(quiz.cur/TOTAL_Q*100)+'%';
+  document.getElementById('qt-count').textContent=`${quiz.cur+1} / ${TOTAL_Q}`;
+  document.getElementById('qs-ok').textContent=quiz.ok;
+  document.getElementById('qs-bad').textContent=quiz.bad;
+  document.getElementById('qs-left').textContent=TOTAL_Q-quiz.cur;
+  document.getElementById('q-text').textContent=`${q.ans} = ${q.a} × ?`;
+  document.getElementById('q-sub').textContent='เลือกตัวคูณที่ถูกต้อง';
+  const grid=document.getElementById('choices');
+  grid.innerHTML='';
+  mkChoices(q.b).forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='choice';btn.textContent=c;
+    btn.onclick=()=>answer(c,q.b,q);
+    grid.appendChild(btn);
+  });
+  const fb=document.getElementById('fb');fb.style.display='none';fb.className='fb';
+}
+function answer(chosen,correct,q){
+  if(quiz.ans)return;quiz.ans=true;
+  const ok=chosen===correct;
+  if(ok)quiz.ok++;else quiz.bad++;
+  document.querySelectorAll('.choice').forEach(b=>{
+    b.disabled=true;const v=parseInt(b.textContent);
+    if(v===correct) b.classList.add(ok&&v===chosen?'ok':'show');
+    if(v===chosen&&!ok) b.classList.add('bad');
+  });
+  const fb=document.getElementById('fb');
+  fb.style.display='block';
+  fb.className='fb '+(ok?'ok':'bad');
+  fb.textContent=ok
+    ? `✅ ถูก!  ${q.ans} = ${q.a} × ${correct}`
+    : `❌ ผิด!  ตัวคูณที่ถูก = ${correct}  →  ${q.a} × ${correct} = ${q.ans}`;
+  document.getElementById('qs-ok').textContent=quiz.ok;
+  document.getElementById('qs-bad').textContent=quiz.bad;
+  setTimeout(()=>{quiz.cur++;quiz.cur<TOTAL_Q?renderQ():(clearInterval(quiz.iv),finish());},850);
+}
+
+/* ── finish ──────────────────────────────────────────────── */
+function finish(){
+  clearInterval(quiz.iv);
+  const elapsed=Math.floor((Date.now()-quiz.t0)/1000);
+  const det=detectLv(elapsed,quiz.bad);
+
+  // banner
+  let overall,cls,icon,title,badge;
+  if(mode==='t'){
+    const timeOk=elapsed<=tSec;
+    overall=timeOk;
+    cls=overall?'rb-pass':'rb-fail';
+    icon=overall?'🏆':'💪';
+    title=overall?'ผ่านเกณฑ์!':'ยังไม่ผ่านเกณฑ์';
+    badge=`ระดับ ${sGrade} · เป้า ${fmtT(tSec)}${quiz.bad>0?' · ผิด '+quiz.bad+' ข้อ':''}`;
+  } else {
+    overall=det!==null;
+    icon=det?det.g==='ป.6'?'🏆':det.g==='ป.5'?'🥇':det.g==='ป.4'?'🥈':'⭐':'💪';
+    title=det?`ระดับ ${det.g}`:'ต่ำกว่า อ.1';
+    cls=overall?'rb-pass':'rb-fail';
+    badge=`🔍 วิเคราะห์จากเวลาจริง ${fmtT(elapsed)}${quiz.bad>0?' · ปรับตามข้อผิด '+quiz.bad+' ข้อ':''}`;
+  }
+  const rb=document.getElementById('rb');
+  rb.className='result-banner '+cls;
+  document.getElementById('rb-icon').textContent=icon;
+  document.getElementById('rb-title').textContent=title;
+  document.getElementById('rb-name').textContent=sName;
+  document.getElementById('rb-badge').textContent=badge;
+
+  // stats
+  document.getElementById('stats').innerHTML=`
+    <div class="sbox"><div class="n">${quiz.ok}/${TOTAL_Q}</div><div class="t">ถูกต้อง</div></div>
+    <div class="sbox"><div class="n" style="color:${quiz.bad>0?'var(--crimson)':'var(--sage)'}">${quiz.bad}</div><div class="t">ข้อที่ผิด</div></div>
+    <div class="sbox"><div class="n">${fmtT(elapsed)}</div><div class="t">เวลาที่ใช้</div></div>`;
+
+  // level analysis
+  buildLvUI(elapsed,det);
+
+  // verdict
+  const vd=document.getElementById('vd');
+  let vi,vt,vs;
+  if(!det){
+    vd.className='verdict vd-fail';vi='⏱';vt='ใช้เวลานานกว่าเกณฑ์ อ.1';
+    vs=`ใช้ ${fmtT(elapsed)} · เกณฑ์ อ.1 คือ ${fmtT(612)} · ฝึกให้คล่องขึ้นนะ!`;
+  } else if(mode==='a'){
+    const penNote = det.penaltySteps>0
+      ? ` (เวลาระดับ ${LEVELS[det.baseIdx].g} → ปรับลง ${det.penaltySteps} ระดับ เพราะผิด ${quiz.bad} ข้อ)`
+      : '';
+    vd.className='verdict vd-info';vi='🔍';vt=`ระดับความคล่องแคล่ว: ${det.label} (${det.g})`;
+    vs=`${det.note}${penNote} · ทำ ${TOTAL_Q} ข้อ ใน ${fmtT(elapsed)}`;
+  } else {
+    const tOk=elapsed<=tSec;
+    vd.className='verdict '+(overall?'vd-pass':'vd-fail');
+    if(overall){
+      vi='✅';vt='นักเรียนคล่องสูตรคูณ!';
+      vs=`ทำ ${TOTAL_Q} ข้อ ใน ${fmtT(elapsed)}${quiz.bad>0?' · ผิด '+quiz.bad+' ข้อ':''}`;
+    } else {
+      vi='⏱';vt='ยังไม่ผ่าน — เกินเวลา';
+      vs=`ใช้ ${fmtT(elapsed)} แต่กำหนด ${fmtT(tSec)} · ระดับที่วิเคราะห์ได้: ${det?det.g:'ต่ำกว่า อ.1'}`;
+    }
+  }
+  document.getElementById('vd-icon').textContent=vi;
+  document.getElementById('vd-text').textContent=vt;
+  document.getElementById('vd-sub').textContent=vs;
+
+  // history rows
+  let hh='';
+  if(mode==='t'){
+    const tOk2=elapsed<=tSec;
+    hh+=`<div class="hrow"><span class="hl">เวลาที่ใช้</span><span class="hv">${fmtT(elapsed)}</span><span class="hb ${tOk2?'p':'f'}">${tOk2?'✓ ทันเวลา':'✗ เกินเวลา'}</span></div>`;
+  } else {
+    hh+=`<div class="hrow"><span class="hl">เวลาที่ใช้</span><span class="hv">${fmtT(elapsed)}</span><span class="hb ${det?'p':'f'}">${det?'✓ อยู่ในเกณฑ์':'✗ เกิน อ.1'}</span></div>`;
+  }
+  hh+=`<div class="hrow"><span class="hl">ข้อที่ผิด</span><span class="hv">${quiz.bad} ข้อ</span><span class="hb ${quiz.bad===0?'p':quiz.bad<=2?'':'f'}">${quiz.bad===0?'✓ ไม่มีข้อผิด':quiz.bad<=2?`⚠ ผิด ${quiz.bad} ข้อ`:`✗ ผิด ${quiz.bad} ข้อ`}</span></div>`;
+  hh+=`<div class="hrow"><span class="hl">ระดับจากเวลา</span><span class="hv">${det?LEVELS[det.baseIdx].g:'—'}</span><span class="hb ${det?'p':'f'}">${det?LEVELS[det.baseIdx].label:'ต่ำกว่า อ.1'}</span></div>`;
+  if(det&&det.penaltySteps>0) hh+=`<div class="hrow"><span class="hl">ปรับตามข้อผิด</span><span class="hv mono" style="font-size:12px;">−${det.penaltySteps} ระดับ</span><span class="hb f">⬇ ผิด ${quiz.bad} ข้อ → ${det.g}</span></div>`;
+  hh+=`<div class="hrow"><span class="hl">ระดับที่วิเคราะห์</span><span class="hv">${det?det.g:'—'}</span><span class="hb ${det?'p':'f'}">${det?det.label:'ต้องฝึกเพิ่ม'}</span></div>`;
+  if(det) hh+=`<div class="hrow"><span class="hl">ความเร็ว</span><span class="hv mono" style="font-size:12px;">${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ</span><span class="hb p">${det.note.split('(')[0].trim()}</span></div>`;
+  document.getElementById('hist').innerHTML=hh;
+
+  // share
+  const today=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const penLine=det&&det.penaltySteps>0?`⬇ ปรับระดับลง ${det.penaltySteps} ขั้น (ผิด ${quiz.bad} ข้อ)\n`:'';
+  document.getElementById('sh-text').textContent=
+    `${det?'🏆':'📊'} ผลวิเคราะห์สูตรคูณ 58 ผลลัพธ์\n`+
+    `──────────────────\n`+
+    `👤 นักเรียน: ${sName}\n`+
+    (mode==='t'?`📚 ระดับชั้น: ${sGrade}\n`:'')+
+    `✅ ถูก: ${quiz.ok} / ${TOTAL_Q} ข้อ\n`+
+    `❌ ผิด: ${quiz.bad} ข้อ\n`+
+    `⏱ เวลา: ${fmtT(elapsed)}\n`+
+    `⚡ ความเร็ว: ${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ\n`+
+    `──────────────────\n`+
+    (det?`📊 ระดับจากเวลา: ${LEVELS[det.baseIdx].g} (${LEVELS[det.baseIdx].label})\n`:'')+
+    penLine+
+    `🔍 ระดับที่วิเคราะห์: ${det?`${det.g} (${det.label})`:'ต้องฝึกเพิ่ม'}\n`+
+    (det?`📈 ${det.note}\n`:'')+
+    `📅 ${today}\n`+
+    `──────────────────\n`+
+    `🎓 ครูแซม · อิงงานวิจัย National Math Advisory Panel (2008)`;
+
+  go('sc-result');
+}
+
+/* ── level analysis UI ───────────────────────────────────── */
+function buildLvUI(elapsed,det){
+  const numEl =document.getElementById('lv-num');
+  const subEl =document.getElementById('lv-sub');
+  const spdEl =document.getElementById('lv-speed');
+  const fillEl=document.getElementById('lv-fill');
+  const pctEl =document.getElementById('lv-pct');
+  const tbody =document.getElementById('lv-tbody');
+
+  if(!det){
+    numEl.textContent='< อ.1';subEl.textContent=`ใช้ ${fmtT(elapsed)} — ช้ากว่าเกณฑ์ อ.1 (10:12)`;
+    spdEl.textContent='ฝึกเพิ่มเพื่อเข้าสู่ระดับ อ.1';fillEl.style.width='2%';pctEl.textContent='< 2%';
+  } else {
+    const maxS=LEVELS[LEVELS.length-1].sec, minS=LEVELS[0].sec;
+    const pct=Math.round(Math.max(0,Math.min(100,((maxS-elapsed)/(maxS-minS))*100)));
+    numEl.textContent=det.g;
+    const penNote = det.penaltySteps>0
+      ? ` · ปรับลง ${det.penaltySteps} ระดับ (ผิด ${det.penaltySteps} ข้อ)`
+      : '';
+    subEl.textContent=`${det.label} · ใช้ ${fmtT(elapsed)} (เกณฑ์เวลา ≤ ${fmtT(LEVELS[det.baseIdx].sec)})${penNote}`;
+    spdEl.textContent=`⚡ ${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ · ${det.note}`;
+    fillEl.style.width=pct+'%';pctEl.textContent=pct+'%';
+  }
+
+  tbody.innerHTML='';
+  LEVELS.forEach((lv,i)=>{
+    const isMe=det&&lv.g===det.g;
+    const isBase=det&&i===det.baseIdx&&det.penaltySteps>0;
+    const pass=elapsed<=lv.sec;
+    const tr=document.createElement('tr');
+    if(isMe)tr.classList.add('hl');
+    let statusCell;
+    if(isBase){
+      statusCell=`<span style="color:var(--amber);font-weight:700;font-size:12px;">⏱ ระดับเวลา</span>`;
+    } else if(isMe){
+      statusCell=`<span class="arrow">◀ ระดับคุณ</span>`;
+    } else if(pass){
+      statusCell=`<span class="ck">✓</span>`;
+    } else {
+      statusCell=`<span style="color:#cbd5e1">—</span>`;
+    }
+    tr.innerHTML=`
+      <td><span class="lv-chip" style="background:${lv.bg};color:${lv.css}">${lv.g}</span></td>
+      <td class="mono" style="font-size:11px;">≤ ${fmtT(lv.sec)}</td>
+      <td class="mono" style="font-size:11px;">${fmtT(elapsed)}</td>
+      <td>${statusCell}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Show error-penalty legend if applicable
+  if(det&&det.penaltySteps>0){
+    const note=document.createElement('tr');
+    note.innerHTML=`<td colspan="4" style="padding:8px 10px;font-size:10px;color:var(--rust);background:rgba(217,119,6,0.06);">
+      ⚠️ ปรับระดับจาก <strong>${LEVELS[det.baseIdx].g}</strong> → <strong>${det.g}</strong> เพราะผิด ${det.penaltySteps} ข้อ (−${det.penaltySteps} ระดับ)
+    </td>`;
+    tbody.appendChild(note);
+  }
+}
+
+function copyShare(){
+  const t=document.getElementById('sh-text').textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(t).then(()=>toast('✅ คัดลอกแล้ว!'));
+  } else {
+    const ta=document.createElement('textarea');ta.value=t;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);toast('✅ คัดลอกแล้ว!');
+  }
+}
+</script>
+</body>
+</html>
