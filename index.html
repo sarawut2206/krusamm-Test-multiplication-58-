@@ -437,7 +437,7 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
     <!-- rows built by JS -->
     <div id="cb-rows"></div>
     <div class="cb-row" style="font-size:11px;color:var(--slate);padding:10px 16px;">
-      🔍 ระดับ = คะแนนจากเวลา · ผิด 0–2 ข้อ = คงระดับ · ผิด 3–4 = ลง 1 ระดับ · ผิด 5+ = ลง 2 ระดับ
+      🔍 ระดับ = คะแนนจากเวลา · ผิด 0–2 = ✅ยืนยัน · ผิด 3–4 = ⚠️ลง 1 · ผิด 5–6 = ⚠️ลง 2 (อ่อน) · ผิด 7–8 = 🔴ลง 2 + ต้องปรับพื้นฐาน · ผิด 9+ = 🔴ต้องเรียนใหม่
     </div>
   </div>
 
@@ -482,12 +482,10 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ (ผลลัพธ์ไม่ซ้ำ)</strong></div>
       <div class="inforow"><span>โหมด</span><strong>🔍 วิเคราะห์ระดับอัตโนมัติ</strong></div>
       <div class="inforow"><span>เวลา</span><strong>ไม่จำกัด (จับเวลาขึ้น)</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–4 = ลง 1 · 5+ = ลง 2</strong></div>
-    </div>
-    <div id="info-target" style="display:none;border-top:1px solid var(--mist);padding-top:12px;">
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 = ✅ยืนยัน · 3–4 = ⚠️ลง 1 · 5–6 = ⚠️ลง 2 · 7–8 = 🔴ลง 2+ปรับพื้นฐาน · 9+ = 🔴เรียนใหม่</strong></div>
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ</strong></div>
       <div class="inforow"><span>เวลาที่กำหนด</span><strong id="inf-time">—</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–4 = ลง 1 · 5+ = ลง 2</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 = ✅ยืนยัน · 3–4 = ⚠️ลง 1 · 5–6 = ⚠️ลง 2 · 7–8 = 🔴ลง 2+ปรับพื้นฐาน · 9+ = 🔴เรียนใหม่</strong></div>
     </div>
   </div>
 
@@ -610,12 +608,13 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
    อ.2    9.53    553   early exposure
    อ.1   10.55    612   pre-formal
    ─────────────────────────────────────────────────────────────
-   ERROR PENALTY (ทุก 2 ข้อที่ผิด = ลง 1 ระดับ, สูงสุด 2 ระดับ):
-   ผิด 0–2 ข้อ → คงระดับเดิม
-   ผิด 3–4 ข้อ → ลง 1 ระดับ
-   ผิด 5–6 ข้อ → ลง 2 ระดับ
-   ผิด 7+  ข้อ → ลง 2 ระดับ (สูงสุด)
-   ─────────────────────────────────────────────────────── */
+   ERROR PENALTY (อิง frustration threshold >15.5%):
+   ผิด 0–2 ข้อ → ✅ คงระดับ (ยืนยัน)
+   ผิด 3–4 ข้อ → ⚠️ ลง 1 ระดับ (เตือน)
+   ผิด 5–6 ข้อ → ⚠️ ลง 2 ระดับ สูงสุด อ.3 (อ่อน)
+   ผิด 7–8 ข้อ → 🔴 ลง 2 ระดับ + flag "ต้องปรับพื้นฐาน" (เสี่ยง)
+   ผิด 9+  ข้อ → 🔴 "ไม่ผ่านมาตรฐาน — ต้องเรียนใหม่" (ผิด >15.5%)
+   ─────────────────────────────────────────────────────────────── */
 const LEVELS = [
   { g:'ป.6', sec:144, label:'ประถม 6',  note:'คล่องอัตโนมัติ (≤2.5 วิ/ข้อ)',   css:'#7c3aed', bg:'#ede9fe' },
   { g:'ป.5', sec:202, label:'ประถม 5',  note:'คล่องแคล่ว (≤3.5 วิ/ข้อ)',         css:'#1d4ed8', bg:'#dbeafe' },
@@ -665,20 +664,33 @@ function toast(m){
   setTimeout(()=>t.classList.remove('show'),2400);
 }
 function errorPenalty(wrong){
-  // ทุก 2 ข้อที่ผิด = ลง 1 ระดับ, สูงสุด 2 ระดับ
-  // ผิด 0–2 → 0, ผิด 3–4 → 1, ผิด 5+ → 2
+  // ผิด 0–2 → 0 (คงระดับ)
+  // ผิด 3–4 → 1 (ลง 1)
+  // ผิด 5–6 → 2 (ลง 2 สูงสุด อ.3)
+  // ผิด 7–8 → 2 + flag "ต้องปรับพื้นฐาน"
+  // ผิด 9+  → special "ไม่ผ่านมาตรฐาน"
   if(wrong<=2) return 0;
-  return Math.min(Math.floor((wrong-1)/2), 2);
+  if(wrong<=4) return 1;
+  return 2; // 5+ ลง 2 (จะใช้ flag แยกต่างหาก)
+}
+function getPenaltyFlag(wrong){
+  if(wrong>=9) return 'fail9';   // ไม่ผ่านมาตรฐาน
+  if(wrong>=7) return 'warn78';  // ต้องปรับพื้นฐาน
+  if(wrong>=5) return 'warn56';  // อ่อน
+  return null;
 }
 function detectLv(sec, wrong){
+  // ผิด 9+ = ไม่ผ่านมาตรฐาน (ไม่วิเคราะห์ระดับ)
+  if(wrong>=9) return { fail9: true, baseIdx: -1, penaltySteps: 0 };
   // Find base level by time
   let idx = -1;
   for(let i=0;i<LEVELS.length;i++) if(sec<=LEVELS[i].sec){idx=i;break;}
   if(idx===-1) return null; // slower than อ.1
-  // Tiered penalty
+  // Tiered penalty: ลง 1 ระดับต่อ 2 ข้อผิด ไม่จำกัดขั้น (จนถึง อ.1 สุดท้าย)
   const steps = errorPenalty(wrong);
   const penaltyIdx = Math.min(idx + steps, LEVELS.length - 1);
-  return { ...LEVELS[penaltyIdx], baseIdx: idx, penaltySteps: steps };
+  const flag = getPenaltyFlag(wrong);
+  return { ...LEVELS[penaltyIdx], baseIdx: idx, penaltySteps: steps, flag };
 }
 
 /* ── mode ────────────────────────────────────────────────── */
@@ -807,17 +819,22 @@ function finish(){
   let overall,cls,icon,title,badge;
   if(mode==='t'){
     const timeOk=elapsed<=tSec;
-    overall=timeOk;
+    overall=timeOk&&quiz.bad<9;
     cls=overall?'rb-pass':'rb-fail';
     icon=overall?'🏆':'💪';
     title=overall?'ผ่านเกณฑ์!':'ยังไม่ผ่านเกณฑ์';
-    badge=`ระดับ ${sGrade} · เป้า ${fmtT(tSec)}${quiz.bad>0?' · ผิด '+quiz.bad+' ข้อ':''}`;
+    badge=quiz.bad>=9?`🔴 ผิด ${quiz.bad} ข้อ — ต้องปรับพื้นฐานใหม่`:`ระดับ ${sGrade} · เป้า ${fmtT(tSec)}${quiz.bad>0?' · ผิด '+quiz.bad+' ข้อ':''}`;
   } else {
-    overall=det!==null;
-    icon=det?det.g==='ป.6'?'🏆':det.g==='ป.5'?'🥇':det.g==='ป.4'?'🥈':'⭐':'💪';
-    title=det?`ระดับ ${det.g}`:'ต่ำกว่า อ.1';
-    cls=overall?'rb-pass':'rb-fail';
-    badge=`🔍 วิเคราะห์จากเวลาจริง ${fmtT(elapsed)}${quiz.bad>0?' · ปรับตามข้อผิด '+quiz.bad+' ข้อ':''}`;
+    const isFail9 = det&&det.fail9;
+    overall = det!==null && !isFail9;
+    if(isFail9){icon='🔴';title='ต้องปรับพื้นฐานใหม่';cls='rb-fail';}
+    else if(!det){icon='💪';title='ต่ำกว่า อ.1';cls='rb-fail';}
+    else{
+      icon=det.g==='ป.6'?'🏆':det.g==='ป.5'?'🥇':det.g==='ป.4'?'🥈':'⭐';
+      title=det.flag==='warn78'?`ระดับ ${det.g} · ⚠️ ต้องปรับพื้นฐาน`:`ระดับ ${det.g}`;
+      cls='rb-pass';
+    }
+    badge=isFail9?`ผิด ${quiz.bad} ข้อ — เกิน threshold (>15.5%)`:`🔍 วิเคราะห์จากเวลาจริง ${fmtT(elapsed)}${quiz.bad>0?' · ปรับตามข้อผิด '+quiz.bad+' ข้อ':''}`;
   }
   const rb=document.getElementById('rb');
   rb.className='result-banner '+cls;
@@ -838,14 +855,21 @@ function finish(){
   // verdict
   const vd=document.getElementById('vd');
   let vi,vt,vs;
-  if(!det){
+  if(det&&det.fail9){
+    vd.className='verdict vd-fail';vi='🔴';vt='ไม่ผ่านมาตรฐาน — ต้องปรับพื้นฐานใหม่';
+    vs=`ผิด ${quiz.bad} ข้อ (${((quiz.bad/TOTAL_Q)*100).toFixed(1)}%) · เกิน threshold ผิด >15.5% · แนะนำให้เรียนใหม่ตั้งแต่ต้น`;
+  } else if(!det){
     vd.className='verdict vd-fail';vi='⏱';vt='ใช้เวลานานกว่าเกณฑ์ อ.1';
     vs=`ใช้ ${fmtT(elapsed)} · เกณฑ์ อ.1 คือ ${fmtT(612)} · ฝึกให้คล่องขึ้นนะ!`;
   } else if(mode==='a'){
     const penNote = det.penaltySteps>0
       ? ` (เวลาระดับ ${LEVELS[det.baseIdx].g} → ปรับลง ${det.penaltySteps} ระดับ เพราะผิด ${quiz.bad} ข้อ)`
       : '';
-    vd.className='verdict vd-info';vi='🔍';vt=`ระดับความคล่องแคล่ว: ${det.label} (${det.g})`;
+    const flagNote = det.flag==='warn78' ? ' 🔴 เสี่ยง — ต้องปรับพื้นฐาน'
+                   : det.flag==='warn56' ? ' ⚠️ อ่อน'
+                   : det.flag==='warn34' ? ' ⚠️ เตือน' : '';
+    vd.className='verdict vd-info';vi='🔍';
+    vt=`ระดับความคล่องแคล่ว: ${det.label} (${det.g})${flagNote}`;
     vs=`${det.note}${penNote} · ทำ ${TOTAL_Q} ข้อ ใน ${fmtT(elapsed)}`;
   } else {
     const tOk=elapsed<=tSec;
@@ -870,13 +894,22 @@ function finish(){
   } else {
     hh+=`<div class="hrow"><span class="hl">เวลาที่ใช้</span><span class="hv">${fmtT(elapsed)}</span><span class="hb ${det?'p':'f'}">${det?'✓ อยู่ในเกณฑ์':'✗ เกิน อ.1'}</span></div>`;
   }
-  const badCls=quiz.bad===0?'p':quiz.bad<=2?'p':'f';
-  const badLabel=quiz.bad===0?'✓ ไม่มีข้อผิด':quiz.bad<=2?`✓ ผิด ${quiz.bad} ข้อ (ยืนยันระดับ)`:quiz.bad<=4?`⚠ ผิด ${quiz.bad} ข้อ (ลง 1 ระดับ)`:`✗ ผิด ${quiz.bad} ข้อ (ลง 2 ระดับ)`;
+  const badCls=quiz.bad===0?'p':quiz.bad<=2?'p':quiz.bad<=4?'f':quiz.bad<=6?'f':quiz.bad<=8?'f':'f';
+  const badLabel=quiz.bad===0?'✓ ไม่มีข้อผิด (✅ ยืนยัน)'
+    :quiz.bad<=2?`✓ ผิด ${quiz.bad} ข้อ (✅ ยืนยันระดับ)`
+    :quiz.bad<=4?`⚠ ผิด ${quiz.bad} ข้อ (⚠️ ลง 1 ระดับ)`
+    :quiz.bad<=6?`⚠ ผิด ${quiz.bad} ข้อ (⚠️ อ่อน — ลง 2)`
+    :quiz.bad<=8?`✗ ผิด ${quiz.bad} ข้อ (🔴 เสี่ยง — ลง 2 + ต้องปรับพื้นฐาน)`
+    :`✗ ผิด ${quiz.bad} ข้อ (🔴 ต้องเรียนใหม่)`;
   hh+=`<div class="hrow"><span class="hl">ข้อที่ผิด</span><span class="hv">${quiz.bad} ข้อ</span><span class="hb ${badCls}">${badLabel}</span></div>`;
-  hh+=`<div class="hrow"><span class="hl">ระดับจากเวลา</span><span class="hv">${det?LEVELS[det.baseIdx].g:'—'}</span><span class="hb ${det?'p':'f'}">${det?LEVELS[det.baseIdx].label:'ต่ำกว่า อ.1'}</span></div>`;
-  if(det&&det.penaltySteps>0) hh+=`<div class="hrow"><span class="hl">ปรับตามข้อผิด</span><span class="hv mono" style="font-size:12px;">−${det.penaltySteps} ระดับ</span><span class="hb f">⬇ ผิด ${quiz.bad} ข้อ → ${det.g}</span></div>`;
-  hh+=`<div class="hrow"><span class="hl">ระดับที่วิเคราะห์</span><span class="hv">${det?det.g:'—'}</span><span class="hb ${det?'p':'f'}">${det?det.label:'ต้องฝึกเพิ่ม'}</span></div>`;
-  if(det) hh+=`<div class="hrow"><span class="hl">ความเร็ว</span><span class="hv mono" style="font-size:12px;">${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ</span><span class="hb p">${det.note.split('(')[0].trim()}</span></div>`;
+  hh+=`<div class="hrow"><span class="hl">ระดับจากเวลา</span><span class="hv">${det&&!det.fail9&&det.baseIdx>=0?LEVELS[det.baseIdx].g:'—'}</span><span class="hb ${det&&!det.fail9&&det.baseIdx>=0?'p':'f'}">${det&&!det.fail9&&det.baseIdx>=0?LEVELS[det.baseIdx].label:'ต่ำกว่า อ.1'}</span></div>`;
+  if(det&&!det.fail9&&det.penaltySteps>0){
+    const penDesc = quiz.bad<=4?'ลง 1 ระดับ':quiz.bad<=6?'ลง 2 ระดับ (อ่อน)':'ลง 2 ระดับ (เสี่ยง)';
+    hh+=`<div class="hrow"><span class="hl">ปรับตามข้อผิด</span><span class="hv mono" style="font-size:12px;">−${det.penaltySteps} ระดับ</span><span class="hb f">⬇ ผิด ${quiz.bad} ข้อ → ${penDesc}</span></div>`;
+  }
+  if(det&&!det.fail9) hh+=`<div class="hrow"><span class="hl">ระดับที่วิเคราะห์</span><span class="hv">${det.g}</span><span class="hb ${det.flag?'f':'p'}">${det.flag==='warn78'?'🔴 ต้องปรับพื้นฐาน':det.flag==='warn56'?'⚠️ อ่อน':det.label}</span></div>`;
+  if(det&&det.fail9) hh+=`<div class="hrow"><span class="hl">ระดับที่วิเคราะห์</span><span class="hv">—</span><span class="hb f">🔴 ต้องเรียนใหม่</span></div>`;
+  if(det&&!det.fail9) hh+=`<div class="hrow"><span class="hl">ความเร็ว</span><span class="hv mono" style="font-size:12px;">${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ</span><span class="hb p">${det.note.split('(')[0].trim()}</span></div>`;
   document.getElementById('hist').innerHTML=hh;
 
   // error analysis
@@ -884,7 +917,7 @@ function finish(){
 
   // share
   const today=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-  const penDesc=quiz.bad<=2?'(ยืนยันระดับ — ผิดน้อย)':quiz.bad<=5?'(ลง 1 ระดับ)':'(ลง 2 ระดับ)';
+  const penDesc=quiz.bad<=2?'(✅ ยืนยันระดับ — ผิดน้อย)':quiz.bad<=4?'(⚠️ ลง 1 ระดับ)':quiz.bad<=6?'(⚠️ อ่อน — ลง 2 ระดับ)':quiz.bad<=8?'(🔴 เสี่ยง — ลง 2 + ต้องปรับพื้นฐาน)':'(🔴 ต้องเรียนใหม่)';
   const penLine=det&&det.penaltySteps>0?`⬇ ปรับระดับลง ${det.penaltySteps} ขั้น ${penDesc}\n`:'';
   const weakGroups=[...new Set(quiz.errors.map(e=>e.a))].sort((a,b)=>a-b);
   const weakLine=weakGroups.length?`📌 แม่ที่อ่อน: แม่ ${weakGroups.join(', แม่ ')}\n`:'';
@@ -898,11 +931,11 @@ function finish(){
     `⏱ เวลา: ${fmtT(elapsed)}\n`+
     `⚡ ความเร็ว: ${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ\n`+
     `──────────────────\n`+
-    (det?`📊 ระดับจากเวลา: ${LEVELS[det.baseIdx].g} (${LEVELS[det.baseIdx].label})\n`:'')+
+    (det&&!det.fail9&&det.baseIdx>=0?`📊 ระดับจากเวลา: ${LEVELS[det.baseIdx].g} (${LEVELS[det.baseIdx].label})\n`:'')+
     penLine+
     weakLine+
-    `🔍 ระดับที่วิเคราะห์: ${det?`${det.g} (${det.label})`:'ต้องฝึกเพิ่ม'}\n`+
-    (det?`📈 ${det.note}\n`:'')+
+    `🔍 ระดับที่วิเคราะห์: ${det&&det.fail9?'ไม่ผ่านมาตรฐาน — ต้องเรียนใหม่':det?`${det.g} (${det.label})`:'ต้องฝึกเพิ่ม'}\n`+
+    (det&&!det.fail9?`📈 ${det.note}\n`:'')+
     `📅 ${today}\n`+
     `──────────────────\n`+
     `🎓 ครูแซม · อิงงานวิจัย National Math Advisory Panel (2008)`;
@@ -919,9 +952,14 @@ function buildLvUI(elapsed,det){
   const pctEl =document.getElementById('lv-pct');
   const tbody =document.getElementById('lv-tbody');
 
-  if(!det){
-    numEl.textContent='< อ.1';subEl.textContent=`ใช้ ${fmtT(elapsed)} — ช้ากว่าเกณฑ์ อ.1 (10:12)`;
-    spdEl.textContent='ฝึกเพิ่มเพื่อเข้าสู่ระดับ อ.1';fillEl.style.width='2%';pctEl.textContent='< 2%';
+  if(!det||det.fail9){
+    if(det&&det.fail9){
+      numEl.textContent='🔴';subEl.textContent=`ผิด ${quiz.bad} ข้อ — เกิน threshold (>15.5%) · ไม่วิเคราะห์ระดับ`;
+      spdEl.textContent='แนะนำให้ปรับพื้นฐานและเรียนใหม่ตั้งแต่ต้น';fillEl.style.width='0%';pctEl.textContent='—';
+    } else {
+      numEl.textContent='< อ.1';subEl.textContent=`ใช้ ${fmtT(elapsed)} — ช้ากว่าเกณฑ์ อ.1 (10:12)`;
+      spdEl.textContent='ฝึกเพิ่มเพื่อเข้าสู่ระดับ อ.1';fillEl.style.width='2%';pctEl.textContent='< 2%';
+    }
   } else {
     const maxS=LEVELS[LEVELS.length-1].sec, minS=LEVELS[0].sec;
     const pct=Math.round(Math.max(0,Math.min(100,((maxS-elapsed)/(maxS-minS))*100)));
@@ -978,9 +1016,11 @@ function buildErrorUI(errors, det){
   // title with penalty badge
   const penSteps = det?det.penaltySteps:0;
   let badgeHtml='';
-  if(errors.length<=2) badgeHtml=`<span class="penalty-badge penalty-ok">ผิด ${errors.length} ข้อ — ยืนยันระดับ</span>`;
-  else if(errors.length<=4) badgeHtml=`<span class="penalty-badge penalty-warn">ผิด ${errors.length} ข้อ — ลง 1 ระดับ</span>`;
-  else badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — ลง 2 ระดับ</span>`;
+  if(errors.length<=2)       badgeHtml=`<span class="penalty-badge penalty-ok">ผิด ${errors.length} ข้อ — ✅ ยืนยันระดับ</span>`;
+  else if(errors.length<=4)  badgeHtml=`<span class="penalty-badge penalty-warn">ผิด ${errors.length} ข้อ — ⚠️ ลง 1 ระดับ</span>`;
+  else if(errors.length<=6)  badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — ⚠️ อ่อน (ลง 2)</span>`;
+  else if(errors.length<=8)  badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — 🔴 เสี่ยง (ลง 2 + ต้องปรับพื้นฐาน)</span>`;
+  else                       badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — 🔴 ต้องเรียนใหม่</span>`;
   document.getElementById('err-title').innerHTML=`❌ ข้อที่ตอบผิด ${badgeHtml}`;
 
   // error chips: each wrong question
