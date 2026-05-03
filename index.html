@@ -810,7 +810,11 @@ function answer(chosen,correct,q){
     : `❌ ผิด!  ตัวคูณที่ถูก = ${correct}  →  ${q.a} × ${correct} = ${q.ans}`;
   document.getElementById('qs-ok').textContent=quiz.ok;
   document.getElementById('qs-bad').textContent=quiz.bad;
-  setTimeout(()=>{quiz.cur++;quiz.cur<TOTAL_Q?renderQ():(clearInterval(quiz.iv),finish());},850);
+  if(!ok && quiz.bad>=9){
+    setTimeout(()=>{clearInterval(quiz.iv);finish();},1200);
+  } else {
+    setTimeout(()=>{quiz.cur++;quiz.cur<TOTAL_Q?renderQ():(clearInterval(quiz.iv),finish());},850);
+  }
 }
 
 /* ── finish ──────────────────────────────────────────────── */
@@ -831,7 +835,7 @@ function finish(){
   } else {
     const isFail9 = det&&det.fail9;
     overall = det!==null && !isFail9;
-    if(isFail9){icon='🔴';title='ต้องปรับพื้นฐานใหม่';cls='rb-fail';}
+    if(isFail9){icon='🔴';title='หยุดการทดสอบ — ต้องเรียนใหม่';cls='rb-fail';}
     else if(!det){icon='💪';title='ต่ำกว่า อ.1';cls='rb-fail';}
     else{
       icon=det.g==='ป.6'?'🏆':det.g==='ป.5'?'🥇':det.g==='ป.4'?'🥈':'⭐';
@@ -860,8 +864,8 @@ function finish(){
   const vd=document.getElementById('vd');
   let vi,vt,vs;
   if(det&&det.fail9){
-    vd.className='verdict vd-fail';vi='🔴';vt='ไม่ผ่านมาตรฐาน — ต้องปรับพื้นฐานใหม่';
-    vs=`ผิด ${quiz.bad} ข้อ (${((quiz.bad/TOTAL_Q)*100).toFixed(1)}%) · เกิน threshold ผิด >15.5% · แนะนำให้เรียนใหม่ตั้งแต่ต้น`;
+    vd.className='verdict vd-fail';vi='🔴';vt='🛑 หยุดการทดสอบ — ต้องเรียนใหม่';
+    vs=`ผิด ${quiz.bad} ข้อ (ทำไปแล้ว ${quiz.cur} ข้อ) · เกิน threshold ผิด >15.5% · แนะนำให้กลับไปฝึกพื้นฐานใหม่ตั้งแต่ต้น`;
   } else if(!det){
     vd.className='verdict vd-fail';vi='⏱';vt='ใช้เวลานานกว่าเกณฑ์ อ.1';
     vs=`ใช้ ${fmtT(elapsed)} · เกณฑ์ อ.1 คือ ${fmtT(612)} · ฝึกให้คล่องขึ้นนะ!`;
@@ -926,7 +930,7 @@ function finish(){
   const weakGroups=[...new Set(quiz.errors.map(e=>e.a))].sort((a,b)=>a-b);
   const weakLine=weakGroups.length?`📌 แม่ที่อ่อน: แม่ ${weakGroups.join(', แม่ ')}\n`:'';
   document.getElementById('sh-text').textContent=
-    `${det?'🏆':'📊'} ผลวิเคราะห์สูตรคูณ 58 ผลลัพธ์\n`+
+    `${det&&det.fail9?'🛑':det?'🏆':'📊'} ผลวิเคราะห์สูตรคูณ 58 ผลลัพธ์\n`+
     `──────────────────\n`+
     `👤 นักเรียน: ${sName}\n`+
     (mode==='t'?`📚 ระดับชั้น: ${sGrade}\n`:'')+
@@ -958,8 +962,8 @@ function buildLvUI(elapsed,det){
 
   if(!det||det.fail9){
     if(det&&det.fail9){
-      numEl.textContent='🔴';subEl.textContent=`ผิด ${quiz.bad} ข้อ — เกิน threshold (>15.5%) · ไม่วิเคราะห์ระดับ`;
-      spdEl.textContent='แนะนำให้ปรับพื้นฐานและเรียนใหม่ตั้งแต่ต้น';fillEl.style.width='0%';pctEl.textContent='—';
+      numEl.textContent='🛑';subEl.textContent=`ผิด ${quiz.bad} ข้อ ใน ${quiz.cur} ข้อที่ทำ — เกินเกณฑ์ · หยุดการทดสอบทันที`;
+      spdEl.textContent='🔴 แนะนำให้กลับไปฝึกสูตรคูณทีละแม่จนคล่อง แล้วค่อยมาทดสอบใหม่';fillEl.style.width='0%';pctEl.textContent='—';
     } else {
       numEl.textContent='< อ.1';subEl.textContent=`ใช้ ${fmtT(elapsed)} — ช้ากว่าเกณฑ์ อ.1 (10:12)`;
       spdEl.textContent='ฝึกเพิ่มเพื่อเข้าสู่ระดับ อ.1';fillEl.style.width='2%';pctEl.textContent='< 2%';
