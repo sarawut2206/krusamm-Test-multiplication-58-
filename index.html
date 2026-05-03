@@ -338,8 +338,45 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
 }
 .toast.show{transform:translateX(-50%) translateY(0);}
 
-/* ── RESEARCH MODAL ────────────────────────────────────────── */
-.ref-link{
+/* ── ERROR ANALYSIS ────────────────────────────────────────── */
+.err-card{
+  background:var(--card);border:1px solid var(--border);
+  border-left:4px solid var(--crimson);
+  border-radius:12px;padding:18px;margin-bottom:14px;
+}
+.err-title{font-family:'Noto Serif Thai',serif;font-size:13px;font-weight:700;color:var(--crimson);margin-bottom:12px;}
+.err-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.err-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(190,18,60,.08);border:1px solid rgba(190,18,60,.2);
+  border-radius:6px;padding:5px 10px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--crimson);
+}
+.err-chip-ans{
+  background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.2);
+  border-radius:4px;padding:1px 6px;font-size:10px;color:var(--rust);
+}
+.weak-title{font-size:11px;font-weight:700;color:var(--slate);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;}
+.weak-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;}
+.weak-chip{
+  background:rgba(217,119,6,.12);border:1px solid rgba(217,119,6,.25);
+  border-radius:20px;padding:3px 10px;
+  font-family:'Noto Serif Thai',serif;font-size:11px;font-weight:700;color:var(--rust);
+}
+.err-tip{
+  font-size:11px;color:var(--slate);line-height:1.7;
+  background:var(--mist);border-radius:6px;padding:10px 12px;
+}
+.penalty-badge{
+  display:inline-block;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:4px;margin-left:6px;
+}
+.penalty-ok{background:rgba(21,128,61,.12);color:var(--sage);}
+.penalty-warn{background:rgba(217,119,6,.15);color:var(--rust);}
+.penalty-bad{background:rgba(190,18,60,.12);color:var(--crimson);}
+
+
   display:block;text-align:center;
   font-size:11px;color:var(--amber);
   cursor:pointer;margin-top:6px;text-decoration:underline;
@@ -400,7 +437,7 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
     <!-- rows built by JS -->
     <div id="cb-rows"></div>
     <div class="cb-row" style="font-size:11px;color:var(--slate);padding:10px 16px;">
-      🔍 ระดับ = คะแนนจากเวลา ปรับตามข้อที่ผิด (−1 ระดับ/ข้อ)
+      🔍 ระดับ = คะแนนจากเวลา · ผิด 0–2 ข้อ = คงระดับ · ผิด 3–5 = ลง 1 ระดับ · ผิด 6+ = ลง 2 ระดับ
     </div>
   </div>
 
@@ -445,12 +482,12 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ (ผลลัพธ์ไม่ซ้ำ)</strong></div>
       <div class="inforow"><span>โหมด</span><strong>🔍 วิเคราะห์ระดับอัตโนมัติ</strong></div>
       <div class="inforow"><span>เวลา</span><strong>ไม่จำกัด (จับเวลาขึ้น)</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>ใช้ปรับระดับ (−1 ระดับ/ข้อ)</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–5 = ลง 1 · 6+ = ลง 2</strong></div>
     </div>
     <div id="info-target" style="display:none;border-top:1px solid var(--mist);padding-top:12px;">
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ</strong></div>
       <div class="inforow"><span>เวลาที่กำหนด</span><strong id="inf-time">—</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>ใช้ปรับระดับ (−1 ระดับ/ข้อ)</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–5 = ลง 1 · 6+ = ลง 2</strong></div>
     </div>
   </div>
 
@@ -533,6 +570,17 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
   <div class="sec-tag">รายละเอียด</div>
   <div id="hist"></div>
 
+  <!-- error analysis -->
+  <div id="err-section" style="display:none;">
+    <div class="err-card">
+      <div class="err-title" id="err-title">❌ ข้อที่ตอบผิด</div>
+      <div class="err-chips" id="err-chips"></div>
+      <div class="weak-title">แม่คูณที่ยังอ่อน</div>
+      <div class="weak-chips" id="weak-chips"></div>
+      <div class="err-tip" id="err-tip"></div>
+    </div>
+  </div>
+
   <div class="divline"></div>
 
   <div class="share-box">
@@ -562,7 +610,10 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
    อ.2    9.53    553   early exposure
    อ.1   10.55    612   pre-formal
    ─────────────────────────────────────────────────────────────
-   ERROR PENALTY: ทุก 1 ข้อที่ผิด = +1 ระดับลดลง (เลื่อนระดับลง 1 ขั้น)
+   ERROR PENALTY (tiered):
+   ผิด 0–2 ข้อ → คงระดับเดิม (ยืนยันระดับนั้น)
+   ผิด 3–5 ข้อ → ลง 1 ระดับ
+   ผิด 6+ ข้อ  → ลง 2 ระดับ
    ─────────────────────────────────────────────────────── */
 const LEVELS = [
   { g:'ป.6', sec:144, label:'ประถม 6',  note:'Automaticity (≤2.5 วิ/ข้อ)',   css:'#7c3aed', bg:'#ede9fe' },
@@ -612,14 +663,20 @@ function toast(m){
   t.textContent=m;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2400);
 }
+function errorPenalty(wrong){
+  if(wrong<=2) return 0;
+  if(wrong<=5) return 1;
+  return 2;
+}
 function detectLv(sec, wrong){
   // Find base level by time
   let idx = -1;
   for(let i=0;i<LEVELS.length;i++) if(sec<=LEVELS[i].sec){idx=i;break;}
   if(idx===-1) return null; // slower than อ.1
-  // Error penalty: each wrong answer shifts level down by 1
-  const penaltyIdx = Math.min(idx + wrong, LEVELS.length - 1);
-  return { ...LEVELS[penaltyIdx], baseIdx: idx, penaltySteps: wrong };
+  // Tiered penalty
+  const steps = errorPenalty(wrong);
+  const penaltyIdx = Math.min(idx + steps, LEVELS.length - 1);
+  return { ...LEVELS[penaltyIdx], baseIdx: idx, penaltySteps: steps };
 }
 
 /* ── mode ────────────────────────────────────────────────── */
@@ -681,7 +738,7 @@ function mkChoices(correct){
 /* ── quiz logic ──────────────────────────────────────────── */
 function startQuiz(){
   document.getElementById('qt-tag').textContent = mode==='a'?'🔍 ANALYZE':'🎯 TARGET';
-  quiz={qs:buildQs(),cur:0,ok:0,bad:0,ans:false,iv:null,t0:Date.now()};
+  quiz={qs:buildQs(),cur:0,ok:0,bad:0,errors:[],ans:false,iv:null,t0:Date.now()};
   quiz.iv=setInterval(tick,500);
   renderQ();
   go('sc-quiz');
@@ -720,7 +777,8 @@ function renderQ(){
 function answer(chosen,correct,q){
   if(quiz.ans)return;quiz.ans=true;
   const ok=chosen===correct;
-  if(ok)quiz.ok++;else quiz.bad++;
+  if(ok)quiz.ok++;
+  else{quiz.bad++;quiz.errors.push({text:`${q.ans} = ${q.a} × ?`,ans:q.ans,a:q.a,b:q.b});}
   document.querySelectorAll('.choice').forEach(b=>{
     b.disabled=true;const v=parseInt(b.textContent);
     if(v===correct) b.classList.add(ok&&v===chosen?'ok':'show');
@@ -810,16 +868,24 @@ function finish(){
   } else {
     hh+=`<div class="hrow"><span class="hl">เวลาที่ใช้</span><span class="hv">${fmtT(elapsed)}</span><span class="hb ${det?'p':'f'}">${det?'✓ อยู่ในเกณฑ์':'✗ เกิน อ.1'}</span></div>`;
   }
-  hh+=`<div class="hrow"><span class="hl">ข้อที่ผิด</span><span class="hv">${quiz.bad} ข้อ</span><span class="hb ${quiz.bad===0?'p':quiz.bad<=2?'':'f'}">${quiz.bad===0?'✓ ไม่มีข้อผิด':quiz.bad<=2?`⚠ ผิด ${quiz.bad} ข้อ`:`✗ ผิด ${quiz.bad} ข้อ`}</span></div>`;
+  const badCls=quiz.bad===0?'p':quiz.bad<=2?'p':'f';
+  const badLabel=quiz.bad===0?'✓ ไม่มีข้อผิด':quiz.bad<=2?`✓ ผิด ${quiz.bad} ข้อ (ยืนยันระดับ)`:quiz.bad<=5?`⚠ ผิด ${quiz.bad} ข้อ (ลง 1 ระดับ)`:`✗ ผิด ${quiz.bad} ข้อ (ลง 2 ระดับ)`;
+  hh+=`<div class="hrow"><span class="hl">ข้อที่ผิด</span><span class="hv">${quiz.bad} ข้อ</span><span class="hb ${badCls}">${badLabel}</span></div>`;
   hh+=`<div class="hrow"><span class="hl">ระดับจากเวลา</span><span class="hv">${det?LEVELS[det.baseIdx].g:'—'}</span><span class="hb ${det?'p':'f'}">${det?LEVELS[det.baseIdx].label:'ต่ำกว่า อ.1'}</span></div>`;
   if(det&&det.penaltySteps>0) hh+=`<div class="hrow"><span class="hl">ปรับตามข้อผิด</span><span class="hv mono" style="font-size:12px;">−${det.penaltySteps} ระดับ</span><span class="hb f">⬇ ผิด ${quiz.bad} ข้อ → ${det.g}</span></div>`;
   hh+=`<div class="hrow"><span class="hl">ระดับที่วิเคราะห์</span><span class="hv">${det?det.g:'—'}</span><span class="hb ${det?'p':'f'}">${det?det.label:'ต้องฝึกเพิ่ม'}</span></div>`;
   if(det) hh+=`<div class="hrow"><span class="hl">ความเร็ว</span><span class="hv mono" style="font-size:12px;">${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ</span><span class="hb p">${det.note.split('(')[0].trim()}</span></div>`;
   document.getElementById('hist').innerHTML=hh;
 
+  // error analysis
+  buildErrorUI(quiz.errors, det);
+
   // share
   const today=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-  const penLine=det&&det.penaltySteps>0?`⬇ ปรับระดับลง ${det.penaltySteps} ขั้น (ผิด ${quiz.bad} ข้อ)\n`:'';
+  const penDesc=quiz.bad<=2?'(ยืนยันระดับ — ผิดน้อย)':quiz.bad<=5?'(ลง 1 ระดับ)':'(ลง 2 ระดับ)';
+  const penLine=det&&det.penaltySteps>0?`⬇ ปรับระดับลง ${det.penaltySteps} ขั้น ${penDesc}\n`:'';
+  const weakGroups=[...new Set(quiz.errors.map(e=>e.a))].sort((a,b)=>a-b);
+  const weakLine=weakGroups.length?`📌 แม่ที่อ่อน: แม่ ${weakGroups.join(', แม่ ')}\n`:'';
   document.getElementById('sh-text').textContent=
     `${det?'🏆':'📊'} ผลวิเคราะห์สูตรคูณ 58 ผลลัพธ์\n`+
     `──────────────────\n`+
@@ -832,6 +898,7 @@ function finish(){
     `──────────────────\n`+
     (det?`📊 ระดับจากเวลา: ${LEVELS[det.baseIdx].g} (${LEVELS[det.baseIdx].label})\n`:'')+
     penLine+
+    weakLine+
     `🔍 ระดับที่วิเคราะห์: ${det?`${det.g} (${det.label})`:'ต้องฝึกเพิ่ม'}\n`+
     (det?`📈 ${det.note}\n`:'')+
     `📅 ${today}\n`+
@@ -858,8 +925,8 @@ function buildLvUI(elapsed,det){
     const pct=Math.round(Math.max(0,Math.min(100,((maxS-elapsed)/(maxS-minS))*100)));
     numEl.textContent=det.g;
     const penNote = det.penaltySteps>0
-      ? ` · ปรับลง ${det.penaltySteps} ระดับ (ผิด ${det.penaltySteps} ข้อ)`
-      : '';
+      ? ` · ปรับลง ${det.penaltySteps} ระดับ (ผิด ${quiz.bad<=5?'3–5':'6+'} ข้อ)`
+      : det.penaltySteps===0&&quiz.bad>0?' · ยืนยันระดับ (ผิด ≤2 ข้อ)':'';
     subEl.textContent=`${det.label} · ใช้ ${fmtT(elapsed)} (เกณฑ์เวลา ≤ ${fmtT(LEVELS[det.baseIdx].sec)})${penNote}`;
     spdEl.textContent=`⚡ ${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ · ${det.note}`;
     fillEl.style.width=pct+'%';pctEl.textContent=pct+'%';
@@ -894,9 +961,56 @@ function buildLvUI(elapsed,det){
   if(det&&det.penaltySteps>0){
     const note=document.createElement('tr');
     note.innerHTML=`<td colspan="4" style="padding:8px 10px;font-size:10px;color:var(--rust);background:rgba(217,119,6,0.06);">
-      ⚠️ ปรับระดับจาก <strong>${LEVELS[det.baseIdx].g}</strong> → <strong>${det.g}</strong> เพราะผิด ${det.penaltySteps} ข้อ (−${det.penaltySteps} ระดับ)
+      ⚠️ ปรับระดับจาก <strong>${LEVELS[det.baseIdx].g}</strong> → <strong>${det.g}</strong> เพราะผิด ${quiz.bad} ข้อ (−${det.penaltySteps} ระดับ)
     </td>`;
     tbody.appendChild(note);
+  }
+}
+
+/* ── error analysis UI ───────────────────────────────────── */
+function buildErrorUI(errors, det){
+  const sec=document.getElementById('err-section');
+  if(!errors||errors.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
+
+  // title with penalty badge
+  const penSteps = det?det.penaltySteps:0;
+  let badgeHtml='';
+  if(errors.length<=2) badgeHtml=`<span class="penalty-badge penalty-ok">ผิด ${errors.length} ข้อ — ยืนยันระดับ</span>`;
+  else if(errors.length<=5) badgeHtml=`<span class="penalty-badge penalty-warn">ผิด ${errors.length} ข้อ — ลง 1 ระดับ</span>`;
+  else badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — ลง 2 ระดับ</span>`;
+  document.getElementById('err-title').innerHTML=`❌ ข้อที่ตอบผิด ${badgeHtml}`;
+
+  // error chips: each wrong question
+  const chipsEl=document.getElementById('err-chips');
+  chipsEl.innerHTML='';
+  errors.forEach(e=>{
+    const chip=document.createElement('div');
+    chip.className='err-chip';
+    chip.innerHTML=`<span>แม่ ${e.a}</span><span class="err-chip-ans">${e.ans} = ${e.a}×${e.b}</span>`;
+    chipsEl.appendChild(chip);
+  });
+
+  // weak groups: count errors per table (a)
+  const counts={};
+  errors.forEach(e=>{counts[e.a]=(counts[e.a]||0)+1;});
+  const sorted=Object.entries(counts).sort((x,y)=>y[1]-x[1]);
+  const weakEl=document.getElementById('weak-chips');
+  weakEl.innerHTML='';
+  sorted.forEach(([a,c])=>{
+    const w=document.createElement('span');
+    w.className='weak-chip';
+    w.textContent=`แม่ ${a} (${c} ข้อ)`;
+    weakEl.appendChild(w);
+  });
+
+  // tip
+  const tipEl=document.getElementById('err-tip');
+  const weakList=sorted.map(([a])=>`แม่ ${a}`).join(', ');
+  if(sorted.length===1){
+    tipEl.innerHTML=`💡 <strong>แนะนำ:</strong> ฝึก${weakList} เพิ่มเป็นพิเศษ — ท่อง ${sorted[0][0]}×1 ถึง ${sorted[0][0]}×12 ให้คล่อง แล้วมาทดสอบใหม่`;
+  } else {
+    tipEl.innerHTML=`💡 <strong>แนะนำ:</strong> ยังมีจุดอ่อนที่ ${weakList} — ฝึกทีละแม่จนคล่องก่อน แล้วค่อยทดสอบรวมอีกครั้ง`;
   }
 }
 
