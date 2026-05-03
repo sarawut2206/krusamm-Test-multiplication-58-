@@ -437,7 +437,7 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
     <!-- rows built by JS -->
     <div id="cb-rows"></div>
     <div class="cb-row" style="font-size:11px;color:var(--slate);padding:10px 16px;">
-      🔍 ระดับ = คะแนนจากเวลา · ผิด 0–2 ข้อ = คงระดับ · ผิด 3–5 = ลง 1 ระดับ · ผิด 6+ = ลง 2 ระดับ
+      🔍 ระดับ = คะแนนจากเวลา · ผิด 0–2 ข้อ = คงระดับ · ผิด 3–4 = ลง 1 ระดับ · ผิด 5+ = ลง 2 ระดับ
     </div>
   </div>
 
@@ -482,12 +482,12 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ (ผลลัพธ์ไม่ซ้ำ)</strong></div>
       <div class="inforow"><span>โหมด</span><strong>🔍 วิเคราะห์ระดับอัตโนมัติ</strong></div>
       <div class="inforow"><span>เวลา</span><strong>ไม่จำกัด (จับเวลาขึ้น)</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–5 = ลง 1 · 6+ = ลง 2</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–4 = ลง 1 · 5+ = ลง 2</strong></div>
     </div>
     <div id="info-target" style="display:none;border-top:1px solid var(--mist);padding-top:12px;">
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ</strong></div>
       <div class="inforow"><span>เวลาที่กำหนด</span><strong id="inf-time">—</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–5 = ลง 1 · 6+ = ลง 2</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 ข้อ = ยืนยันระดับ · 3–4 = ลง 1 · 5+ = ลง 2</strong></div>
     </div>
   </div>
 
@@ -610,21 +610,22 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
    อ.2    9.53    553   early exposure
    อ.1   10.55    612   pre-formal
    ─────────────────────────────────────────────────────────────
-   ERROR PENALTY (tiered):
-   ผิด 0–2 ข้อ → คงระดับเดิม (ยืนยันระดับนั้น)
-   ผิด 3–5 ข้อ → ลง 1 ระดับ
-   ผิด 6+ ข้อ  → ลง 2 ระดับ
+   ERROR PENALTY (ทุก 2 ข้อที่ผิด = ลง 1 ระดับ, สูงสุด 2 ระดับ):
+   ผิด 0–2 ข้อ → คงระดับเดิม
+   ผิด 3–4 ข้อ → ลง 1 ระดับ
+   ผิด 5–6 ข้อ → ลง 2 ระดับ
+   ผิด 7+  ข้อ → ลง 2 ระดับ (สูงสุด)
    ─────────────────────────────────────────────────────── */
 const LEVELS = [
-  { g:'ป.6', sec:144, label:'ประถม 6',  note:'Automaticity (≤2.5 วิ/ข้อ)',   css:'#7c3aed', bg:'#ede9fe' },
-  { g:'ป.5', sec:202, label:'ประถม 5',  note:'Fluent (≤3.5 วิ/ข้อ)',         css:'#1d4ed8', bg:'#dbeafe' },
-  { g:'ป.4', sec:261, label:'ประถม 4',  note:'Developing (≤4.5 วิ/ข้อ)',     css:'#0369a1', bg:'#e0f2fe' },
-  { g:'ป.3', sec:319, label:'ประถม 3',  note:'Beginning (≤5.5 วิ/ข้อ)',      css:'#047857', bg:'#d1fae5' },
-  { g:'ป.2', sec:377, label:'ประถม 2',  note:'Counting+Recall (≤6.5 วิ/ข้อ)',css:'#15803d', bg:'#dcfce7' },
-  { g:'ป.1', sec:436, label:'ประถม 1',  note:'Mostly Counting (≤7.5 วิ/ข้อ)',css:'#a16207', bg:'#fef9c3' },
-  { g:'อ.3', sec:494, label:'อนุบาล 3', note:'First Intro (≤8.5 วิ/ข้อ)',    css:'#b45309', bg:'#fef3c7' },
-  { g:'อ.2', sec:553, label:'อนุบาล 2', note:'Early Exposure (≤9.5 วิ/ข้อ)', css:'#c2410c', bg:'#ffedd5' },
-  { g:'อ.1', sec:612, label:'อนุบาล 1', note:'Pre-formal (≤10.6 วิ/ข้อ)',    css:'#be123c', bg:'#ffe4e6' },
+  { g:'ป.6', sec:144, label:'ประถม 6',  note:'คล่องอัตโนมัติ (≤2.5 วิ/ข้อ)',   css:'#7c3aed', bg:'#ede9fe' },
+  { g:'ป.5', sec:202, label:'ประถม 5',  note:'คล่องแคล่ว (≤3.5 วิ/ข้อ)',         css:'#1d4ed8', bg:'#dbeafe' },
+  { g:'ป.4', sec:261, label:'ประถม 4',  note:'กำลังพัฒนา (≤4.5 วิ/ข้อ)',     css:'#0369a1', bg:'#e0f2fe' },
+  { g:'ป.3', sec:319, label:'ประถม 3',  note:'เริ่มต้นคล่อง (≤5.5 วิ/ข้อ)',      css:'#047857', bg:'#d1fae5' },
+  { g:'ป.2', sec:377, label:'ประถม 2',  note:'นับ+จำบางส่วน (≤6.5 วิ/ข้อ)',css:'#15803d', bg:'#dcfce7' },
+  { g:'ป.1', sec:436, label:'ประถม 1',  note:'นับเป็นหลัก (≤7.5 วิ/ข้อ)',css:'#a16207', bg:'#fef9c3' },
+  { g:'อ.3', sec:494, label:'อนุบาล 3', note:'เริ่มรู้จัก (≤8.5 วิ/ข้อ)',    css:'#b45309', bg:'#fef3c7' },
+  { g:'อ.2', sec:553, label:'อนุบาล 2', note:'รู้จักเบื้องต้น (≤9.5 วิ/ข้อ)', css:'#c2410c', bg:'#ffedd5' },
+  { g:'อ.1', sec:612, label:'อนุบาล 1', note:'ก่อนเรียนสูตรคูณ (≤10.6 วิ/ข้อ)',    css:'#be123c', bg:'#ffe4e6' },
 ];
 const TOTAL_Q = 58;
 
@@ -664,9 +665,10 @@ function toast(m){
   setTimeout(()=>t.classList.remove('show'),2400);
 }
 function errorPenalty(wrong){
+  // ทุก 2 ข้อที่ผิด = ลง 1 ระดับ, สูงสุด 2 ระดับ
+  // ผิด 0–2 → 0, ผิด 3–4 → 1, ผิด 5+ → 2
   if(wrong<=2) return 0;
-  if(wrong<=5) return 1;
-  return 2;
+  return Math.min(Math.floor((wrong-1)/2), 2);
 }
 function detectLv(sec, wrong){
   // Find base level by time
@@ -869,7 +871,7 @@ function finish(){
     hh+=`<div class="hrow"><span class="hl">เวลาที่ใช้</span><span class="hv">${fmtT(elapsed)}</span><span class="hb ${det?'p':'f'}">${det?'✓ อยู่ในเกณฑ์':'✗ เกิน อ.1'}</span></div>`;
   }
   const badCls=quiz.bad===0?'p':quiz.bad<=2?'p':'f';
-  const badLabel=quiz.bad===0?'✓ ไม่มีข้อผิด':quiz.bad<=2?`✓ ผิด ${quiz.bad} ข้อ (ยืนยันระดับ)`:quiz.bad<=5?`⚠ ผิด ${quiz.bad} ข้อ (ลง 1 ระดับ)`:`✗ ผิด ${quiz.bad} ข้อ (ลง 2 ระดับ)`;
+  const badLabel=quiz.bad===0?'✓ ไม่มีข้อผิด':quiz.bad<=2?`✓ ผิด ${quiz.bad} ข้อ (ยืนยันระดับ)`:quiz.bad<=4?`⚠ ผิด ${quiz.bad} ข้อ (ลง 1 ระดับ)`:`✗ ผิด ${quiz.bad} ข้อ (ลง 2 ระดับ)`;
   hh+=`<div class="hrow"><span class="hl">ข้อที่ผิด</span><span class="hv">${quiz.bad} ข้อ</span><span class="hb ${badCls}">${badLabel}</span></div>`;
   hh+=`<div class="hrow"><span class="hl">ระดับจากเวลา</span><span class="hv">${det?LEVELS[det.baseIdx].g:'—'}</span><span class="hb ${det?'p':'f'}">${det?LEVELS[det.baseIdx].label:'ต่ำกว่า อ.1'}</span></div>`;
   if(det&&det.penaltySteps>0) hh+=`<div class="hrow"><span class="hl">ปรับตามข้อผิด</span><span class="hv mono" style="font-size:12px;">−${det.penaltySteps} ระดับ</span><span class="hb f">⬇ ผิด ${quiz.bad} ข้อ → ${det.g}</span></div>`;
@@ -925,7 +927,7 @@ function buildLvUI(elapsed,det){
     const pct=Math.round(Math.max(0,Math.min(100,((maxS-elapsed)/(maxS-minS))*100)));
     numEl.textContent=det.g;
     const penNote = det.penaltySteps>0
-      ? ` · ปรับลง ${det.penaltySteps} ระดับ (ผิด ${quiz.bad<=5?'3–5':'6+'} ข้อ)`
+      ? ` · ปรับลง ${det.penaltySteps} ระดับ (ผิด ${quiz.bad<=4?'3–4':'5+'} ข้อ)`
       : det.penaltySteps===0&&quiz.bad>0?' · ยืนยันระดับ (ผิด ≤2 ข้อ)':'';
     subEl.textContent=`${det.label} · ใช้ ${fmtT(elapsed)} (เกณฑ์เวลา ≤ ${fmtT(LEVELS[det.baseIdx].sec)})${penNote}`;
     spdEl.textContent=`⚡ ${(elapsed/TOTAL_Q).toFixed(1)} วิ/ข้อ · ${det.note}`;
@@ -977,7 +979,7 @@ function buildErrorUI(errors, det){
   const penSteps = det?det.penaltySteps:0;
   let badgeHtml='';
   if(errors.length<=2) badgeHtml=`<span class="penalty-badge penalty-ok">ผิด ${errors.length} ข้อ — ยืนยันระดับ</span>`;
-  else if(errors.length<=5) badgeHtml=`<span class="penalty-badge penalty-warn">ผิด ${errors.length} ข้อ — ลง 1 ระดับ</span>`;
+  else if(errors.length<=4) badgeHtml=`<span class="penalty-badge penalty-warn">ผิด ${errors.length} ข้อ — ลง 1 ระดับ</span>`;
   else badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — ลง 2 ระดับ</span>`;
   document.getElementById('err-title').innerHTML=`❌ ข้อที่ตอบผิด ${badgeHtml}`;
 
