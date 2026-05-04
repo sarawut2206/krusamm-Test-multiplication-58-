@@ -304,6 +304,32 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
 .vd-text{font-size:15px;font-weight:700;}
 .vd-sub{font-size:12px;font-weight:400;margin-top:4px;opacity:.85;}
 
+/* ── COMPARE CARD ──────────────────────────────────────────── */
+.cmp-card{
+  border-radius:14px;padding:20px;margin-bottom:14px;
+  font-family:'Noto Serif Thai',serif;text-align:center;
+}
+.cmp-pass{background:linear-gradient(135deg,rgba(21,128,61,.08),rgba(21,128,61,.15));border:2px solid var(--sage);}
+.cmp-fail{background:linear-gradient(135deg,rgba(190,18,60,.06),rgba(190,18,60,.12));border:2px solid var(--crimson);}
+.cmp-equal{background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(217,119,6,.15));border:2px solid var(--amber);}
+.cmp-icon{font-size:36px;margin-bottom:8px;}
+.cmp-title{font-size:17px;font-weight:900;margin-bottom:6px;}
+.cmp-pass .cmp-title{color:#065f46;}
+.cmp-fail .cmp-title{color:#881337;}
+.cmp-equal .cmp-title{color:var(--rust);}
+.cmp-row{
+  display:flex;align-items:center;justify-content:center;
+  gap:10px;margin:12px 0 6px;
+}
+.cmp-box{
+  background:#fff;border-radius:10px;padding:10px 16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);min-width:80px;
+}
+.cmp-box .cv{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;line-height:1;}
+.cmp-box .cl{font-size:10px;color:var(--slate);margin-top:3px;}
+.cmp-arrow{font-size:22px;}
+.cmp-sub{font-size:12px;color:var(--slate);line-height:1.6;margin-top:8px;}
+
 /* ── HISTORY ───────────────────────────────────────────────── */
 .hrow{
   display:flex;align-items:center;
@@ -437,7 +463,7 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
     <!-- rows built by JS -->
     <div id="cb-rows"></div>
     <div class="cb-row" style="font-size:11px;color:var(--slate);padding:10px 16px;">
-      🔍 ระดับ = คะแนนจากเวลา · ผิด 0–2 = ✅ยืนยัน · ผิด 3–4 = ⚠️ลง 1 · ผิด 5–6 = ⚠️ลง 2 (อ่อน) · ผิด 7–8 = 🔴ลง 2 + ต้องปรับพื้นฐาน · ผิด 9+ = 🔴ต้องเรียนใหม่
+      🔍 ระดับ = คะแนนจากเวลา · ผิด 0–2 = ✅ยืนยัน · ผิด 3–4 = ⚠️ลง 1 · ผิด 5–6 = ⚠️ลง 2 (อ่อน) · ผิด 7–8 = 🔴ลง 2 + ต้องปรับพื้นฐาน · ผิด 9–11 = 🔴เสี่ยงสูง · ผิด 12+ = 🔴ต้องเรียนใหม่
     </div>
   </div>
 
@@ -478,16 +504,35 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
       </select>
     </div>
 
+    <div id="analyze-grade-wrap">
+      <label class="form-label">ระดับชั้นของนักเรียน</label>
+      <select id="inp-grade-analyze">
+        <option value="">-- เลือกระดับชั้น --</option>
+        <option value="อ.1">อนุบาล 1</option>
+        <option value="อ.2">อนุบาล 2</option>
+        <option value="อ.3">อนุบาล 3</option>
+        <option value="ป.1">ประถม 1</option>
+        <option value="ป.2">ประถม 2</option>
+        <option value="ป.3">ประถม 3</option>
+        <option value="ป.4">ประถม 4</option>
+        <option value="ป.5">ประถม 5</option>
+        <option value="ป.6">ประถม 6</option>
+        <option value="ม.1">มัธยม 1</option>
+        <option value="ม.2">มัธยม 2</option>
+        <option value="ม.3">มัธยม 3</option>
+      </select>
+    </div>
+
     <div id="info-analyze" style="border-top:1px solid var(--mist);padding-top:12px;">
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ (ผลลัพธ์ไม่ซ้ำ)</strong></div>
       <div class="inforow"><span>โหมด</span><strong>🔍 วิเคราะห์ระดับอัตโนมัติ</strong></div>
       <div class="inforow"><span>เวลา</span><strong>ไม่จำกัด (จับเวลาขึ้น)</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 = ✅ยืนยัน · 3–4 = ⚠️ลง 1 · 5–6 = ⚠️ลง 2 · 7–8 = 🔴ลง 2+ปรับพื้นฐาน · 9+ = 🔴เรียนใหม่</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 = ✅ยืนยัน · 3–4 = ⚠️ลง 1 · 5–6 = ⚠️ลง 2 · 7–8 = 🔴ลง 2+ปรับพื้นฐาน · 9–11 = 🔴เสี่ยงสูง · 12+ = 🔴เรียนใหม่</strong></div>
     </div>
     <div id="info-target" style="border-top:1px solid var(--mist);padding-top:12px;display:none;">
       <div class="inforow"><span>จำนวนข้อ</span><strong>58 ข้อ</strong></div>
       <div class="inforow"><span>เวลาที่กำหนด</span><strong id="inf-time">—</strong></div>
-      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 = ✅ยืนยัน · 3–4 = ⚠️ลง 1 · 5–6 = ⚠️ลง 2 · 7–8 = 🔴ลง 2+ปรับพื้นฐาน · 9+ = 🔴เรียนใหม่</strong></div>
+      <div class="inforow"><span>ข้อที่ผิด</span><strong>0–2 = ✅ยืนยัน · 3–4 = ⚠️ลง 1 · 5–6 = ⚠️ลง 2 · 7–8 = 🔴ลง 2+ปรับพื้นฐาน · 9–11 = 🔴เสี่ยงสูง · 12+ = 🔴เรียนใหม่</strong></div>
     </div>
   </div>
 
@@ -535,6 +580,9 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
   </div>
 
   <div class="stat3" id="stats"></div>
+
+  <!-- grade comparison card (แสดงเมื่อเลือกระดับชั้นไว้ก่อนเริ่ม) -->
+  <div id="cmp-card" style="display:none;"></div>
 
   <!-- level analysis -->
   <div class="lv-card">
@@ -698,14 +746,15 @@ function errorPenalty(wrong){
   return 2; // 5+ ลง 2 (จะใช้ flag แยกต่างหาก)
 }
 function getPenaltyFlag(wrong){
-  if(wrong>=9) return 'fail9';   // ไม่ผ่านมาตรฐาน
-  if(wrong>=7) return 'warn78';  // ต้องปรับพื้นฐาน
-  if(wrong>=5) return 'warn56';  // อ่อน
+  if(wrong>=12) return 'fail9';   // ไม่ผ่านมาตรฐาน
+  if(wrong>=9)  return 'warn78';  // ต้องปรับพื้นฐาน
+  if(wrong>=7)  return 'warn56';  // อ่อน
+  if(wrong>=5)  return 'warn34';  // เตือน
   return null;
 }
 function detectLv(sec, wrong){
-  // ผิด 9+ = ไม่ผ่านมาตรฐาน (ไม่วิเคราะห์ระดับ)
-  if(wrong>=9) return { fail9: true, baseIdx: -1, penaltySteps: 0 };
+  // ผิด 12+ = ไม่ผ่านมาตรฐาน (ไม่วิเคราะห์ระดับ)
+  if(wrong>=12) return { fail9: true, baseIdx: -1, penaltySteps: 0 };
   // Find base level by time
   let idx = -1;
   for(let i=0;i<LEVELS.length;i++) if(sec<=LEVELS[i].sec){idx=i;break;}
@@ -726,12 +775,14 @@ function setMode(m){
 function goSetup(){
   document.getElementById('inp-name').value='';
   document.getElementById('inp-grade').value='';
+  document.getElementById('inp-grade-analyze').value='';
   document.getElementById('setup-h').textContent =
     mode==='a' ? '📋 ข้อมูลนักเรียน — วิเคราะห์ระดับ'
                : '📋 ข้อมูลนักเรียน — ตั้งเป้าหมาย';
-  document.getElementById('grade-wrap').style.display  = mode==='t'?'':'none';
-  document.getElementById('info-analyze').style.display= mode==='a'?'':'none';
-  document.getElementById('info-target').style.display = mode==='t'?'':'none';
+  document.getElementById('grade-wrap').style.display         = mode==='t'?'':'none';
+  document.getElementById('analyze-grade-wrap').style.display = mode==='a'?'':'none';
+  document.getElementById('info-analyze').style.display       = mode==='a'?'':'none';
+  document.getElementById('info-target').style.display        = mode==='t'?'':'none';
   go('sc-setup');
 }
 function refreshInfo(){
@@ -746,7 +797,13 @@ function doStart(){
     const gv=document.getElementById('inp-grade').value;
     if(!gv){toast('⚠️ กรุณาเลือกระดับชั้น');return;}
     [sGrade,tSec]=[gv.split('|')[0],parseInt(gv.split('|')[1])];
-  } else {sGrade='';tSec=0;}
+  } else {
+    // โหมดวิเคราะห์ — เก็บระดับชั้นที่เลือก (ไม่บังคับ)
+    sGrade = document.getElementById('inp-grade-analyze').value || '';
+    tSec = 0;
+  }
+  // บันทึกข้อมูลเริ่มต้น (รอบที่ 1) — ก่อนเริ่มทำข้อสอบ
+  saveStartRecord();
   startQuiz();
 }
 
@@ -830,7 +887,7 @@ function answer(chosen,correct,q){
     : `❌ ผิด!  ตัวคูณที่ถูก = ${correct}  →  ${q.a} × ${correct} = ${q.ans}`;
   document.getElementById('qs-ok').textContent=quiz.ok;
   document.getElementById('qs-bad').textContent=quiz.bad;
-  if(!ok && quiz.bad>=9){
+  if(!ok && quiz.bad>=12){
     setTimeout(()=>{clearInterval(quiz.iv);finish();},1200);
   } else {
     setTimeout(()=>{quiz.cur++;quiz.cur<TOTAL_Q?renderQ():(clearInterval(quiz.iv),finish());},850);
@@ -847,11 +904,11 @@ function finish(){
   let overall,cls,icon,title,badge;
   if(mode==='t'){
     const timeOk=elapsed<=tSec;
-    overall=timeOk&&quiz.bad<9;
+    overall=timeOk&&quiz.bad<12;
     cls=overall?'rb-pass':'rb-fail';
     icon=overall?'🏆':'💪';
     title=overall?'ผ่านเกณฑ์!':'ยังไม่ผ่านเกณฑ์';
-    badge=quiz.bad>=9?`🔴 ผิด ${quiz.bad} ข้อ — ต้องปรับพื้นฐานใหม่`:`ระดับ ${sGrade} · เป้า ${fmtT(tSec)}${quiz.bad>0?' · ผิด '+quiz.bad+' ข้อ':''}`;
+    badge=quiz.bad>=12?`🔴 ผิด ${quiz.bad} ข้อ — ต้องปรับพื้นฐานใหม่`:`ระดับ ${sGrade} · เป้า ${fmtT(tSec)}${quiz.bad>0?' · ผิด '+quiz.bad+' ข้อ':''}`;
   } else {
     const isFail9 = det&&det.fail9;
     overall = det!==null && !isFail9;
@@ -862,7 +919,7 @@ function finish(){
       title=det.flag==='warn78'?`ระดับ ${det.g} · ⚠️ ต้องปรับพื้นฐาน`:`ระดับ ${det.g}`;
       cls='rb-pass';
     }
-    badge=isFail9?`ผิด ${quiz.bad} ข้อ — เกิน threshold (>15.5%)`:`🔍 วิเคราะห์จากเวลาจริง ${fmtT(elapsed)}${quiz.bad>0?' · ปรับตามข้อผิด '+quiz.bad+' ข้อ':''}`;
+    badge=isFail9?`ผิด ${quiz.bad} ข้อ — เกิน threshold (>20.7%)`:`🔍 วิเคราะห์จากเวลาจริง ${fmtT(elapsed)}${quiz.bad>0?' · ปรับตามข้อผิด '+quiz.bad+' ข้อ':''}`;
   }
   const rb=document.getElementById('rb');
   rb.className='result-banner '+cls;
@@ -885,7 +942,7 @@ function finish(){
   let vi,vt,vs;
   if(det&&det.fail9){
     vd.className='verdict vd-fail';vi='🔴';vt='ไม่ผ่านมาตรฐาน — ต้องปรับพื้นฐานใหม่';
-    vs=`ผิด ${quiz.bad} ข้อ (${((quiz.bad/TOTAL_Q)*100).toFixed(1)}%) · เกิน threshold ผิด >15.5% · แนะนำให้เรียนใหม่ตั้งแต่ต้น`;
+    vs=`ผิด ${quiz.bad} ข้อ (${((quiz.bad/TOTAL_Q)*100).toFixed(1)}%) · เกิน threshold ผิด >20.7% · แนะนำให้เรียนใหม่ตั้งแต่ต้น`;
   } else if(!det){
     vd.className='verdict vd-fail';vi='⏱';vt='ใช้เวลานานกว่าเกณฑ์ อ.1';
     vs=`ใช้ ${fmtT(elapsed)} · เกณฑ์ อ.1 คือ ${fmtT(612)} · ฝึกให้คล่องขึ้นนะ!`;
@@ -953,7 +1010,8 @@ function finish(){
     `${det?'🏆':'📊'} ผลวิเคราะห์สูตรคูณ 58 ผลลัพธ์\n`+
     `──────────────────\n`+
     `👤 นักเรียน: ${sName}\n`+
-    (mode==='t'?`📚 ระดับชั้น: ${sGrade}\n`:'')+
+    (sGrade?`📚 ระดับชั้นที่กรอก: ${sGrade}\n`:'')+
+    (mode==='t'||mode==='a'?'':'')+
     `✅ ถูก: ${quiz.ok} / ${TOTAL_Q} ข้อ\n`+
     `❌ ผิด: ${quiz.bad} ข้อ\n`+
     `⏱ เวลา: ${fmtT(elapsed)}\n`+
@@ -963,15 +1021,87 @@ function finish(){
     penLine+
     weakLine+
     `🔍 ระดับที่วิเคราะห์: ${det&&det.fail9?'ไม่ผ่านมาตรฐาน — ต้องเรียนใหม่':det?`${det.g} (${det.label})`:'ต้องฝึกเพิ่ม'}\n`+
+    (sGrade&&det&&!det.fail9?(()=>{const ii=gradeIdx(sGrade),ri=gradeIdx(det.g);return ii<0||ri<0?'':ri>ii?`🚀 เกินระดับ ${sGrade} — ทำได้ ${det.g} (สูงกว่า ${ri-ii} ระดับ)\n`:ri<ii?`📉 ต่ำกว่าระดับ ${sGrade} — ทำได้ ${det.g} (ต่ำกว่า ${ii-ri} ระดับ)\n`:`✅ ผ่านระดับ ${sGrade} พอดี\n`;})():'')+ 
     (det&&!det.fail9?`📈 ${det.note}\n`:'')+
     `📅 ${today}\n`+
     `──────────────────\n`+
     `🎓 ครูแซม · อิงงานวิจัย National Math Advisory Panel (2008)`;
 
+  // เปรียบเทียบระดับที่กรอกไว้ vs ระดับที่ทำได้
+  buildCompareCard(det);
+
   // บันทึกข้อมูลเข้า Firebase (ไม่รอผล — แสดงผลหน้าจอทันที)
   saveToFirebase(elapsed, det);
 
   go('sc-result');
+}
+
+/* ── grade comparison card ───────────────────────────────────
+   แสดงเมื่อโหมดวิเคราะห์ + ผู้ใช้เลือกระดับชั้นไว้
+   เปรียบ sGrade (ระดับที่กรอก) กับ det.g (ระดับที่ทำได้)
+   ──────────────────────────────────────────────────────────── */
+const GRADE_ORDER = ['อ.1','อ.2','อ.3','ป.1','ป.2','ป.3','ป.4','ป.5','ป.6','ม.1','ม.2','ม.3'];
+function gradeIdx(g){ return GRADE_ORDER.indexOf(g); }
+
+function buildCompareCard(det){
+  const el = document.getElementById('cmp-card');
+  // แสดงเฉพาะ: โหมดวิเคราะห์ + มีระดับที่กรอก + มีผลลัพธ์
+  if(mode !== 'a' || !sGrade || !det || det.fail9){
+    el.style.display='none'; return;
+  }
+  el.style.display='block';
+
+  const inputIdx  = gradeIdx(sGrade);
+  const resultIdx = gradeIdx(det.g);
+
+  let cls, icon, title, sub;
+
+  if(inputIdx < 0 || resultIdx < 0){
+    el.style.display='none'; return;
+  }
+
+  if(resultIdx < inputIdx){
+    // ทำได้ต่ำกว่าที่กรอก
+    const diff = inputIdx - resultIdx;
+    cls   = 'cmp-fail';
+    icon  = '📉';
+    title = `ต่ำกว่าระดับชั้น ${diff} ระดับ — ต้องเร่งพัฒนา`;
+    sub   = `กรอกว่าอยู่ ${sGrade} แต่ทำได้ระดับ ${det.g}<br>แนะนำให้ฝึกสูตรคูณให้คล่องก่อน โดยเฉพาะ${det.g}ให้ผ่านก่อน`;
+  } else if(resultIdx > inputIdx){
+    // ทำได้สูงกว่าที่กรอก
+    const diff = resultIdx - inputIdx;
+    cls   = 'cmp-pass';
+    icon  = '🚀';
+    title = `เกินระดับชั้น ${diff} ระดับ — เก่งมาก!`;
+    sub   = `กรอกว่าอยู่ ${sGrade} แต่ทำได้ระดับ ${det.g}<br>ความคล่องสูตรคูณสูงกว่าเพื่อนร่วมชั้น — ยอดเยี่ยม!`;
+  } else {
+    // ทำได้ตรงระดับที่กรอก
+    cls   = 'cmp-equal';
+    icon  = '✅';
+    title = `ผ่านระดับชั้น ${sGrade} พอดี`;
+    sub   = `ความคล่องสูตรคูณอยู่ในเกณฑ์ที่เหมาะกับชั้นเรียน<br>ฝึกต่อเนื่องเพื่อพัฒนาไปสู่ระดับสูงขึ้น`;
+  }
+
+  // สร้าง input grade label
+  const inputLabel = GRADE_ORDER.includes(sGrade) ? sGrade : sGrade;
+
+  el.innerHTML = `
+    <div class="cmp-card ${cls}">
+      <div class="cmp-icon">${icon}</div>
+      <div class="cmp-title">${title}</div>
+      <div class="cmp-row">
+        <div class="cmp-box">
+          <div class="cv" style="color:var(--slate)">${sGrade}</div>
+          <div class="cl">ระดับที่กรอก</div>
+        </div>
+        <div class="cmp-arrow">→</div>
+        <div class="cmp-box">
+          <div class="cv" style="color:${resultIdx>=inputIdx?'var(--sage)':'var(--crimson)'}">${det.g}</div>
+          <div class="cl">ระดับที่ทำได้จริง</div>
+        </div>
+      </div>
+      <div class="cmp-sub">${sub}</div>
+    </div>`;
 }
 
 /* ── level analysis UI ───────────────────────────────────── */
@@ -1047,11 +1177,12 @@ function buildErrorUI(errors, det){
   // title with penalty badge
   const penSteps = det?det.penaltySteps:0;
   let badgeHtml='';
-  if(errors.length<=2)       badgeHtml=`<span class="penalty-badge penalty-ok">ผิด ${errors.length} ข้อ — ✅ ยืนยันระดับ</span>`;
-  else if(errors.length<=4)  badgeHtml=`<span class="penalty-badge penalty-warn">ผิด ${errors.length} ข้อ — ⚠️ ลง 1 ระดับ</span>`;
-  else if(errors.length<=6)  badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — ⚠️ อ่อน (ลง 2)</span>`;
-  else if(errors.length<=8)  badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — 🔴 เสี่ยง (ลง 2 + ต้องปรับพื้นฐาน)</span>`;
-  else                       badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — 🔴 ต้องเรียนใหม่</span>`;
+  if(errors.length<=2)        badgeHtml=`<span class="penalty-badge penalty-ok">ผิด ${errors.length} ข้อ — ✅ ยืนยันระดับ</span>`;
+  else if(errors.length<=4)   badgeHtml=`<span class="penalty-badge penalty-warn">ผิด ${errors.length} ข้อ — ⚠️ ลง 1 ระดับ</span>`;
+  else if(errors.length<=6)   badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — ⚠️ อ่อน (ลง 2)</span>`;
+  else if(errors.length<=8)   badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — 🔴 เสี่ยง (ลง 2 + ต้องปรับพื้นฐาน)</span>`;
+  else if(errors.length<=11)  badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — 🔴 เสี่ยงสูง (ต้องปรับพื้นฐาน)</span>`;
+  else                        badgeHtml=`<span class="penalty-badge penalty-bad">ผิด ${errors.length} ข้อ — 🔴 ต้องเรียนใหม่</span>`;
   document.getElementById('err-title').innerHTML=`❌ ข้อที่ตอบผิด ${badgeHtml}`;
 
   // error chips: each wrong question
@@ -1099,53 +1230,103 @@ function copyShare(){
 }
 
 /* ── FIREBASE SAVE ───────────────────────────────────────────
-   บันทึกผลลัพธ์เข้า Firestore หลังทำ quiz เสร็จทุกครั้ง
+   2 รอบ:
+   รอบที่ 1 → saveStartRecord()  : ตอนกดเริ่ม (เก็บชื่อ+ระดับ)
+   รอบที่ 2 → saveToFirebase()   : ตอนทำเสร็จ (อัปเดตผลลัพธ์)
    Collection: quiz_results
    ──────────────────────────────────────────────────────────── */
+let _docRef = null; // เก็บ reference ของ document ที่สร้างไว้
+
+async function saveStartRecord(){
+  try {
+    const startData = {
+      // ข้อมูลนักเรียน (รู้ตั้งแต่ต้น)
+      name:        sName,
+      grade_input: mode==='t' ? sGrade : null,
+      mode:        mode==='a' ? 'วิเคราะห์ระดับ' : 'ตั้งเป้าหมาย',
+      // สถานะ
+      status:      'started',   // จะอัปเดตเป็น 'completed' ตอนจบ
+      // timestamp เริ่มต้น
+      started_at:     new Date().toISOString(),
+      started_at_th:  new Date().toLocaleDateString('th-TH',{
+        year:'numeric',month:'long',day:'numeric',
+        hour:'2-digit',minute:'2-digit'
+      }),
+      // ยังไม่มีผลลัพธ์
+      result_level:  null,
+      correct:       null,
+      wrong:         null,
+      time_seconds:  null,
+    };
+    _docRef = await window._col.add(startData);
+    console.log('✅ บันทึกข้อมูลเริ่มต้นสำเร็จ id:', _docRef.id);
+  } catch(err){
+    console.warn('⚠️ saveStartRecord error:', err);
+  }
+}
+
 async function saveToFirebase(elapsed, det){
   try {
     const weakGroups = [...new Set(quiz.errors.map(e=>e.a))].sort((a,b)=>a-b);
-    const record = {
-      // ข้อมูลนักเรียน
-      name:        sName,
-      grade_input: mode==='t' ? sGrade : null,   // ระดับที่เลือก (โหมดตั้งเป้า)
-      mode:        mode==='a' ? 'วิเคราะห์ระดับ' : 'ตั้งเป้าหมาย',
+    const resultData = {
+      // สถานะ
+      status: 'completed',
+      // ผลเปรียบเทียบระดับที่กรอก vs ที่ทำได้
+      grade_compare: (()=>{
+        if(!sGrade || !det || det.fail9) return null;
+        const ii=GRADE_ORDER.indexOf(sGrade), ri=GRADE_ORDER.indexOf(det.g);
+        if(ii<0||ri<0) return null;
+        return ri>ii ? 'สูงกว่า' : ri<ii ? 'ต่ำกว่า' : 'ตรงระดับ';
+      })(),
+      grade_diff: (()=>{
+        if(!sGrade || !det || det.fail9) return null;
+        const ii=GRADE_ORDER.indexOf(sGrade), ri=GRADE_ORDER.indexOf(det.g);
+        if(ii<0||ri<0) return null;
+        return ri - ii; // + = สูงกว่า, - = ต่ำกว่า, 0 = ตรง
+      })(),
       // ผลลัพธ์
-      result_level: det && !det.fail9 ? det.g : (det && det.fail9 ? 'ไม่ผ่านมาตรฐาน' : 'ต่ำกว่า อ.1'),
-      result_label: det && !det.fail9 ? det.label : null,
-      base_level:   det && !det.fail9 && det.baseIdx>=0 ? LEVELS[det.baseIdx].g : null,
+      result_level:  det && !det.fail9 ? det.g : (det && det.fail9 ? 'ไม่ผ่านมาตรฐาน' : 'ต่ำกว่า อ.1'),
+      result_label:  det && !det.fail9 ? det.label : null,
+      base_level:    det && !det.fail9 && det.baseIdx>=0 ? LEVELS[det.baseIdx].g : null,
       penalty_steps: det ? det.penaltySteps : 0,
       flag:          det ? (det.flag || null) : null,
       // คะแนน
-      correct:     quiz.ok,
-      wrong:       quiz.bad,
-      total:       TOTAL_Q,
+      correct:      quiz.ok,
+      wrong:        quiz.bad,
+      total:        TOTAL_Q,
       accuracy_pct: Math.round((quiz.ok/TOTAL_Q)*100),
       // เวลา
       time_seconds: elapsed,
       time_fmt:     fmtT(elapsed),
       speed_per_q:  parseFloat((elapsed/TOTAL_Q).toFixed(2)),
       // จุดอ่อน
-      weak_tables:  weakGroups,                          // เช่น [3, 6, 8]
+      weak_tables:     weakGroups,
       weak_tables_str: weakGroups.length ? 'แม่ '+weakGroups.join(', แม่ ') : '-',
-      wrong_details: quiz.errors.map(e=>({
-        question: `${e.a}×${e.b}`,
+      wrong_details:   quiz.errors.map(e=>({
+        question: e.a+'x'+e.b,
         answer:   e.ans,
         table:    e.a
       })),
-      // timestamp
-      timestamp:   new Date().toISOString(),
-      timestamp_th: new Date().toLocaleDateString('th-TH',{
+      // timestamp จบ
+      finished_at:    new Date().toISOString(),
+      finished_at_th: new Date().toLocaleDateString('th-TH',{
         year:'numeric',month:'long',day:'numeric',
         hour:'2-digit',minute:'2-digit'
       }),
     };
 
-    await window._db.addDoc(window._col, record);
-    console.log('✅ บันทึกข้อมูลสำเร็จ');
+    if(_docRef){
+      // อัปเดต document เดิมที่สร้างไว้ตอนเริ่ม
+      await _docRef.update(resultData);
+      console.log('✅ อัปเดตผลลัพธ์สำเร็จ');
+    } else {
+      // fallback: ถ้า saveStartRecord ล้มเหลว → สร้างใหม่
+      const fullData = { name:sName, grade_input:mode==='t'?sGrade:null, mode:mode==='a'?'วิเคราะห์ระดับ':'ตั้งเป้าหมาย', status:'completed', ...resultData };
+      await window._col.add(fullData);
+      console.log('✅ บันทึกผลลัพธ์ใหม่สำเร็จ (fallback)');
+    }
   } catch(err){
-    console.warn('⚠️ บันทึกข้อมูลไม่สำเร็จ:', err);
-    // ไม่แสดง error ให้นักเรียนเห็น — ทำงานปกติต่อไป
+    console.warn('⚠️ saveToFirebase error:', err);
   }
 }
 </script>
@@ -1166,10 +1347,8 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-// เก็บไว้ให้ saveToFirebase() เรียกใช้ได้
-window._db  = { addDoc: (col, data) => col.add(data) };
 window._col = db.collection('quiz_results');
-console.log('🔥 Firebase พร้อมใช้งาน');
+console.log('🔥 Firebase พร้อมใช้งาน — collection: quiz_results');
 </script>
 </body>
 </html>
