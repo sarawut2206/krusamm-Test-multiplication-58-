@@ -798,8 +798,8 @@ function doStart(){
     if(!gv){toast('⚠️ กรุณาเลือกระดับชั้น');return;}
     [sGrade,tSec]=[gv.split('|')[0],parseInt(gv.split('|')[1])];
   } else {
-    // โหมดวิเคราะห์ — เก็บระดับชั้นที่เลือก (ไม่บังคับ)
     sGrade = document.getElementById('inp-grade-analyze').value || '';
+    if(!sGrade){toast('⚠️ กรุณาเลือกระดับชั้นของนักเรียน');return;}
     tSec = 0;
   }
   // บันทึกข้อมูลเริ่มต้น (รอบที่ 1) — ก่อนเริ่มทำข้อสอบ
@@ -1242,7 +1242,7 @@ async function saveStartRecord(){
     const startData = {
       // ข้อมูลนักเรียน (รู้ตั้งแต่ต้น)
       name:        sName,
-      grade_input: mode==='t' ? sGrade : null,
+      grade_input: sGrade || null,
       mode:        mode==='a' ? 'วิเคราะห์ระดับ' : 'ตั้งเป้าหมาย',
       // สถานะ
       status:      'started',   // จะอัปเดตเป็น 'completed' ตอนจบ
