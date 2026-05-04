@@ -968,6 +968,9 @@ function finish(){
     `──────────────────\n`+
     `🎓 ครูแซม · อิงงานวิจัย National Math Advisory Panel (2008)`;
 
+  // บันทึกข้อมูลเข้า Firebase (ไม่รอผล — แสดงผลหน้าจอทันที)
+  saveToFirebase(elapsed, det);
+
   go('sc-result');
 }
 
@@ -1094,6 +1097,79 @@ function copyShare(){
     document.body.removeChild(ta);toast('✅ คัดลอกแล้ว!');
   }
 }
+
+/* ── FIREBASE SAVE ───────────────────────────────────────────
+   บันทึกผลลัพธ์เข้า Firestore หลังทำ quiz เสร็จทุกครั้ง
+   Collection: quiz_results
+   ──────────────────────────────────────────────────────────── */
+async function saveToFirebase(elapsed, det){
+  try {
+    const weakGroups = [...new Set(quiz.errors.map(e=>e.a))].sort((a,b)=>a-b);
+    const record = {
+      // ข้อมูลนักเรียน
+      name:        sName,
+      grade_input: mode==='t' ? sGrade : null,   // ระดับที่เลือก (โหมดตั้งเป้า)
+      mode:        mode==='a' ? 'วิเคราะห์ระดับ' : 'ตั้งเป้าหมาย',
+      // ผลลัพธ์
+      result_level: det && !det.fail9 ? det.g : (det && det.fail9 ? 'ไม่ผ่านมาตรฐาน' : 'ต่ำกว่า อ.1'),
+      result_label: det && !det.fail9 ? det.label : null,
+      base_level:   det && !det.fail9 && det.baseIdx>=0 ? LEVELS[det.baseIdx].g : null,
+      penalty_steps: det ? det.penaltySteps : 0,
+      flag:          det ? (det.flag || null) : null,
+      // คะแนน
+      correct:     quiz.ok,
+      wrong:       quiz.bad,
+      total:       TOTAL_Q,
+      accuracy_pct: Math.round((quiz.ok/TOTAL_Q)*100),
+      // เวลา
+      time_seconds: elapsed,
+      time_fmt:     fmtT(elapsed),
+      speed_per_q:  parseFloat((elapsed/TOTAL_Q).toFixed(2)),
+      // จุดอ่อน
+      weak_tables:  weakGroups,                          // เช่น [3, 6, 8]
+      weak_tables_str: weakGroups.length ? 'แม่ '+weakGroups.join(', แม่ ') : '-',
+      wrong_details: quiz.errors.map(e=>({
+        question: `${e.a}×${e.b}`,
+        answer:   e.ans,
+        table:    e.a
+      })),
+      // timestamp
+      timestamp:   new Date().toISOString(),
+      timestamp_th: new Date().toLocaleDateString('th-TH',{
+        year:'numeric',month:'long',day:'numeric',
+        hour:'2-digit',minute:'2-digit'
+      }),
+    };
+
+    await window._db.addDoc(window._col, record);
+    console.log('✅ บันทึกข้อมูลสำเร็จ');
+  } catch(err){
+    console.warn('⚠️ บันทึกข้อมูลไม่สำเร็จ:', err);
+    // ไม่แสดง error ให้นักเรียนเห็น — ทำงานปกติต่อไป
+  }
+}
+</script>
+
+<!-- Firebase SDK (compat version — ใช้ได้กับ HTML ไฟล์เดียว) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ── FIREBASE INIT ─────────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyA2yBf3RSgaPH7Gk4QeLrjk4GoBvr4KZ_Y",
+  authDomain:        "krusamm-test-multiplication-58.firebaseapp.com",
+  projectId:         "krusamm-test-multiplication-58",
+  storageBucket:     "krusamm-test-multiplication-58.firebasestorage.app",
+  messagingSenderId: "132053562888",
+  appId:             "1:132053562888:web:561152907f6f9497aa03bd",
+  measurementId:     "G-PKTP69B5WK"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+// เก็บไว้ให้ saveToFirebase() เรียกใช้ได้
+window._db  = { addDoc: (col, data) => col.add(data) };
+window._col = db.collection('quiz_results');
+console.log('🔥 Firebase พร้อมใช้งาน');
 </script>
 </body>
 </html>
