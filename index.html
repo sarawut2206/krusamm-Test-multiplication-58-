@@ -592,8 +592,8 @@ input:focus,select:focus{border-color:var(--amber);background:#fff;}
 
   <!-- ══ LINE CONTACT BLOCK ══ -->
   <div style="margin:20px 0;background:linear-gradient(135deg,#06C755,#00a040);border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 16px rgba(6,199,85,0.3);">
-    <div style="font-family:'Noto Serif Thai',serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;">📩 ให้ครูแซมช่วยวิเคราะห์ฟรี!</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.9);line-height:1.7;margin-bottom:14px;">ลูกอยู่ระดับไหน? ครูแซมจะบอกว่าต้องแก้ตรงไหนก่อน<br>ทักมาได้เลย — ฟรี ไม่มีค่าใช้จ่าย</div>
+    <div style="font-family:'Noto Serif Thai',serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:4px;">🎯 อยากรู้ว่าจากผลนี้ ลูกควรฝึกตรงไหนก่อน?</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.9);line-height:1.7;margin-bottom:14px;">ทักครูแซมได้เลยครับ — ฟรี ไม่มีเงื่อนไข</div>
     
     <!-- QR Code -->
     <div style="background:#fff;border-radius:12px;padding:12px;display:inline-block;margin-bottom:14px;">
@@ -830,7 +830,11 @@ function answer(chosen,correct,q){
     : `❌ ผิด!  ตัวคูณที่ถูก = ${correct}  →  ${q.a} × ${correct} = ${q.ans}`;
   document.getElementById('qs-ok').textContent=quiz.ok;
   document.getElementById('qs-bad').textContent=quiz.bad;
-  setTimeout(()=>{quiz.cur++;quiz.cur<TOTAL_Q?renderQ():(clearInterval(quiz.iv),finish());},850);
+  if(!ok && quiz.bad>=9){
+    setTimeout(()=>{clearInterval(quiz.iv);finish();},1200);
+  } else {
+    setTimeout(()=>{quiz.cur++;quiz.cur<TOTAL_Q?renderQ():(clearInterval(quiz.iv),finish());},850);
+  }
 }
 
 /* ── finish ──────────────────────────────────────────────── */
